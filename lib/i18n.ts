@@ -222,6 +222,7 @@ const dict = {
     serviceRadius: "Service radius km",
     remoteDelivery: "Remote city delivery",
     serviceCities: "Service cities",
+    country: "Country",
     city: "City",
     checkoutDispatchBody:
       "After confirmation Jerib finds the best local print partner near you. Payment is simulated in this build.",
@@ -525,6 +526,7 @@ const dict = {
     serviceRadius: "Радиус км",
     remoteDelivery: "Доставка в другой город",
     serviceCities: "Зоны обслуживания",
+    country: "Страна",
     city: "Город",
     checkoutDispatchBody:
       "После подтверждения Jerib найдёт лучшее локальное предприятие рядом с вами. Оплата в этой версии симулируется.",
@@ -830,6 +832,7 @@ const dict = {
     serviceRadius: "Радиус км",
     remoteDelivery: "Расондан ба шаҳри дигар",
     serviceCities: "Минтақаҳои хизмат",
+    country: "Кишвар",
     city: "Шаҳр",
     checkoutDispatchBody:
       "Пас аз тасдиқ Jerib беҳтарин корхонаи маҳаллиро назди шумо меёбад. Пардохт дар ин версия симулятсия аст.",

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth, useSessionUser, useAuthHydrated } from "@/lib/auth/store";
 import { formatPrice } from "@/lib/catalog";
-import { CITIES, cityLabel } from "@/lib/dispatch/cities";
+import { CITIES, cityLabel, locationLabel } from "@/lib/dispatch/cities";
 import { QUALITY_STANDARDS } from "@/lib/dispatch/standards";
 import { partnerById, statusLabel, useDispatch } from "@/lib/dispatch/store";
 import type { Partner, PartnerApproval } from "@/lib/dispatch/types";
@@ -45,7 +45,11 @@ export default function AdminPage() {
   );
 
   const cityStats = useMemo(() => {
-    return CITIES.map((c) => {
+    const activeIds = new Set([
+      ...orders.map((o) => o.cityId),
+      ...partners.map((p) => p.cityId),
+    ]);
+    return CITIES.filter((c) => activeIds.has(c.id)).map((c) => {
       const cityOrders = orders.filter((o) => o.cityId === c.id);
       const cityPartners = partners.filter((p) => p.cityId === c.id && p.approval === "approved");
       const delivered = cityOrders.filter((o) => o.status === "delivered").length;
@@ -227,7 +231,7 @@ export default function AdminPage() {
         <section className="mt-10 grid gap-px bg-white/10 sm:grid-cols-3">
           {cityStats.map((s) => (
             <div key={s.city.id} className="bg-ink p-6">
-              <p className="font-display text-3xl">{cityLabel(s.city.id, lang)}</p>
+              <p className="font-display text-3xl">{locationLabel(s.city.id, lang)}</p>
               <ul className="mt-4 space-y-2 text-sm text-mist">
                 <li>
                   {t("partners")}: {s.partners}
@@ -349,12 +353,12 @@ function PartnersAdmin({
   const createDemo = () => {
     addPartner({
       name: "New Partner Pending",
-      cityId: "dushanbe",
-      address: "Новый адрес",
-      lat: 38.56,
-      lng: 68.78,
+      cityId: "us_new_york",
+      address: "New address",
+      lat: 40.7128,
+      lng: -74.006,
       serviceRadiusKm: 20,
-      serviceCities: ["dushanbe"],
+      serviceCities: ["us_new_york"],
       acceptsRemoteDelivery: false,
       printMethods: ["dtg"],
       products: ["tshirt"],

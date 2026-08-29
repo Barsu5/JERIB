@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { formatPrice } from "@/lib/catalog";
-import { cityLabel } from "@/lib/dispatch/cities";
+import { locationLabel } from "@/lib/dispatch/cities";
 import { statusLabel } from "@/lib/dispatch/store";
 import type { DispatchOrder, PartnerOrderStatus } from "@/lib/dispatch/types";
 import { useLang, useT, type DictKey } from "@/lib/i18n";
@@ -50,7 +50,7 @@ export function ClientOrderCard({ order }: { order: DispatchOrder }) {
           <p className="text-[10px] uppercase tracking-[0.24em] text-mist">{order.id}</p>
           <p className="mt-2 font-display text-3xl text-clay">{statusLabel(order.status, lang)}</p>
           <p className="mt-2 text-sm text-mist">
-            {products} · {cityLabel(order.cityId, lang)}
+            {products} · {locationLabel(order.cityId, lang)}
           </p>
           <p className="mt-1 text-xs text-mist">
             {t("orderedAt")}: {new Date(order.createdAt).toLocaleString()}

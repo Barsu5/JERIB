@@ -1,9 +1,9 @@
 /** Local production partner dispatch — domain types */
 
 import type { CartItem, ProductId } from "@/lib/types";
-import type { City, CityId } from "./cities";
+import type { City, CityId, CountryId } from "./cities";
 
-export type { City, CityId };
+export type { City, CityId, CountryId };
 
 export type PrintMethod = "dtg" | "screen" | "embroidery" | "vinyl" | "sublimation";
 

@@ -4,8 +4,14 @@ import { FormEvent, Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import QuickAuth from "@/components/QuickAuth";
-import { CITIES, cityLabel } from "@/lib/dispatch/cities";
-import type { CityId } from "@/lib/dispatch/types";
+import { CountryCitySelect } from "@/components/CountryCitySelect";
+import {
+  DEFAULT_CITY_ID,
+  DEFAULT_COUNTRY_ID,
+  normalizeCityId,
+  type CityId,
+  type CountryId,
+} from "@/lib/dispatch/cities";
 import { homeForRole, useAuth, useAuthHydrated } from "@/lib/auth/store";
 import type { UserRole } from "@/lib/auth/types";
 import { useLang, useT } from "@/lib/i18n";
@@ -23,7 +29,8 @@ function RegisterForm() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
-  const [cityId, setCityId] = useState<CityId>("dushanbe");
+  const [cityId, setCityId] = useState<CityId>(DEFAULT_CITY_ID);
+  const [countryId, setCountryId] = useState<CountryId>(DEFAULT_COUNTRY_ID);
   const [address, setAddress] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [error, setError] = useState("");
@@ -144,20 +151,12 @@ function RegisterForm() {
             className="mt-2 w-full border border-white/15 bg-transparent px-3 py-3 text-sm outline-none focus:border-clay"
           />
         </label>
-        <label className="block text-[10px] uppercase tracking-[0.22em] text-mist">
-          {t("city")}
-          <select
-            value={cityId}
-            onChange={(e) => setCityId(e.target.value as CityId)}
-            className="mt-2 w-full border border-white/15 bg-ink px-3 py-3 text-sm outline-none focus:border-clay"
-          >
-            {CITIES.map((c) => (
-              <option key={c.id} value={c.id}>
-                {cityLabel(c.id, lang)}
-              </option>
-            ))}
-          </select>
-        </label>
+        <CountryCitySelect
+          countryId={countryId}
+          cityId={cityId}
+          onCountryChange={setCountryId}
+          onCityChange={(id) => setCityId(normalizeCityId(id))}
+        />
         <label className="block text-[10px] uppercase tracking-[0.22em] text-mist">
           {t("address")}
           <textarea

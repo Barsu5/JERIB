@@ -5,10 +5,19 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSessionUser, useAuthHydrated } from "@/lib/auth/store";
 import { formatPrice } from "@/lib/catalog";
-import { CITIES, cityLabel } from "@/lib/dispatch/cities";
+import { CountryCitySelect } from "@/components/CountryCitySelect";
+import {
+  cityById,
+  cityCountryId,
+  DEFAULT_CITY_ID,
+  DEFAULT_COUNTRY_ID,
+  normalizeCityId,
+  type CityId,
+  type CountryId,
+} from "@/lib/dispatch/cities";
 import { rankPartnersGeoFirst } from "@/lib/dispatch/scoring";
 import { useDispatch } from "@/lib/dispatch/store";
-import type { CityId, PrintMethod } from "@/lib/dispatch/types";
+import type { PrintMethod } from "@/lib/dispatch/types";
 import { useLang, useT, type DictKey } from "@/lib/i18n";
 import {
   SERVICE_FEE_SOM,
@@ -32,7 +41,8 @@ export default function CheckoutPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
-  const [cityId, setCityId] = useState<CityId>("dushanbe");
+  const [cityId, setCityId] = useState<CityId>(DEFAULT_CITY_ID);
+  const [countryId, setCountryId] = useState<CountryId>(DEFAULT_COUNTRY_ID);
   const [printMethod, setPrintMethod] = useState<PrintMethod>("dtg");
 
   useEffect(() => {
@@ -40,14 +50,15 @@ export default function CheckoutPage() {
     setName(user.name);
     setEmail(user.email);
     setAddress(user.address);
-    setCityId(user.cityId);
+    setCityId(normalizeCityId(user.cityId));
+    setCountryId(cityCountryId(user.cityId));
   }, [user]);
 
   const quote = useMemo(() => {
     if (!cart.length) return null;
     const productIds = [...new Set(cart.map((i) => i.productId))];
     const qty = cart.reduce((n, i) => n + i.qty, 0);
-    const city = CITIES.find((c) => c.id === cityId)!;
+    const city = cityById(cityId);
     const ranked = rankPartnersGeoFirst(
       partners,
       {
@@ -162,20 +173,12 @@ export default function CheckoutPage() {
             className="mt-2 w-full border border-white/15 bg-transparent px-3 py-3 text-sm text-mist outline-none"
           />
         </label>
-        <label className="block text-[10px] uppercase tracking-[0.22em] text-mist">
-          {t("city")}
-          <select
-            value={cityId}
-            onChange={(e) => setCityId(e.target.value as CityId)}
-            className="mt-2 w-full border border-white/15 bg-ink px-3 py-3 text-sm text-paper outline-none focus:border-clay"
-          >
-            {CITIES.map((c) => (
-              <option key={c.id} value={c.id}>
-                {cityLabel(c.id, lang)}
-              </option>
-            ))}
-          </select>
-        </label>
+        <CountryCitySelect
+          countryId={countryId}
+          cityId={cityId}
+          onCountryChange={setCountryId}
+          onCityChange={(id) => setCityId(normalizeCityId(id))}
+        />
         <label className="block text-[10px] uppercase tracking-[0.22em] text-mist">
           {t("address")}
           <textarea
