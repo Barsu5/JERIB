@@ -30,8 +30,9 @@ export function countryById(id: CountryId | string) {
   return COUNTRIES.find((c) => c.id === id) ?? COUNTRIES[0];
 }
 
-export function countryLabel(id: CountryId | string, _lang: Lang) {
+export function countryLabel(id: CountryId | string, lang: Lang) {
   const c = countryById(id);
+  if (lang === "ru") return c.nameRu;
   return c.nameEn;
 }
 
@@ -48,8 +49,10 @@ export function cityCountryId(id: CityId | string): CountryId {
   return cityById(id).countryId as CountryId;
 }
 
-export function cityLabel(id: CityId | string, _lang: Lang) {
-  return cityById(id).nameEn;
+export function cityLabel(id: CityId | string, lang: Lang) {
+  const c = cityById(id);
+  if (lang === "ru") return c.nameRu;
+  return c.nameEn;
 }
 
 export function locationLabel(cityId: CityId | string, lang: Lang) {

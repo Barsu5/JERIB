@@ -398,6 +398,7 @@ const STATUS_LABELS: Record<
     fr: "Recherche de partenaire",
     de: "Partner wird gesucht",
     pt: "Procurando parceiro",
+    ru: "Поиск партнёра",
   },
   offered: {
     en: "New order",
@@ -405,6 +406,7 @@ const STATUS_LABELS: Record<
     fr: "Nouvelle commande",
     de: "Neue Bestellung",
     pt: "Novo pedido",
+    ru: "Новый заказ",
   },
   accepted: {
     en: "Accepted",
@@ -412,6 +414,7 @@ const STATUS_LABELS: Record<
     fr: "Acceptée",
     de: "Angenommen",
     pt: "Aceito",
+    ru: "Принят",
   },
   in_production: {
     en: "In production",
@@ -419,6 +422,7 @@ const STATUS_LABELS: Record<
     fr: "En production",
     de: "In Produktion",
     pt: "Em produção",
+    ru: "В производстве",
   },
   quality_check: {
     en: "Quality check",
@@ -426,6 +430,7 @@ const STATUS_LABELS: Record<
     fr: "Contrôle qualité",
     de: "Qualitätsprüfung",
     pt: "Controle de qualidade",
+    ru: "Контроль качества",
   },
   ready: {
     en: "Ready",
@@ -433,6 +438,7 @@ const STATUS_LABELS: Record<
     fr: "Prêt",
     de: "Fertig",
     pt: "Pronto",
+    ru: "Готов",
   },
   packed: {
     en: "Packed",
@@ -440,6 +446,7 @@ const STATUS_LABELS: Record<
     fr: "Emballé",
     de: "Verpackt",
     pt: "Embalado",
+    ru: "Упакован",
   },
   with_courier: {
     en: "With courier",
@@ -447,6 +454,7 @@ const STATUS_LABELS: Record<
     fr: "Avec coursier",
     de: "Beim Kurier",
     pt: "Com entregador",
+    ru: "У курьера",
   },
   delivered: {
     en: "Delivered",
@@ -454,6 +462,7 @@ const STATUS_LABELS: Record<
     fr: "Livré",
     de: "Zugestellt",
     pt: "Entregue",
+    ru: "Доставлен",
   },
   failed_no_partner: {
     en: "No partner available",
@@ -461,6 +470,7 @@ const STATUS_LABELS: Record<
     fr: "Aucun partenaire disponible",
     de: "Kein Partner verfügbar",
     pt: "Nenhum parceiro disponível",
+    ru: "Нет доступного партнёра",
   },
 };
 

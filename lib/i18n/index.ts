@@ -7,12 +7,13 @@ import { es } from "./messages/es";
 import { fr } from "./messages/fr";
 import { de } from "./messages/de";
 import { pt } from "./messages/pt";
+import { ru } from "./messages/ru";
 
-export type Lang = "en" | "es" | "fr" | "de" | "pt";
+export type Lang = "en" | "es" | "fr" | "de" | "pt" | "ru";
 
 export type DictKey = keyof typeof en;
 
-const dict = { en, es, fr, de, pt };
+const dict = { en, es, fr, de, pt, ru };
 
 type LangState = {
   lang: Lang;
@@ -20,7 +21,7 @@ type LangState = {
   t: (key: DictKey) => string;
 };
 
-const VALID_LANGS = new Set<Lang>(["en", "es", "fr", "de", "pt"]);
+const VALID_LANGS = new Set<Lang>(["en", "es", "fr", "de", "pt", "ru"]);
 
 export const useLang = create<LangState>()(
   persist(
@@ -41,6 +42,7 @@ export const useLang = create<LangState>()(
 
 export const LANGS: { id: Lang; label: string }[] = [
   { id: "en", label: "EN" },
+  { id: "ru", label: "RU" },
   { id: "es", label: "ES" },
   { id: "fr", label: "FR" },
   { id: "de", label: "DE" },
