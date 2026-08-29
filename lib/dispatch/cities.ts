@@ -68,6 +68,7 @@ export const CITIES = [
 
   // GBAO
   { id: "khorugh", nameEn: "Khorugh", nameRu: "Хорог", nameTg: "Хоруғ", lat: 37.4917, lng: 71.5583 },
+  { id: "roshtqala", nameEn: "Roshtqal'a", nameRu: "Рошткала", nameTg: "Роштқалъа", lat: 37.9419, lng: 71.5706 },
   { id: "murghob", nameEn: "Murghob", nameRu: "Мургаб", nameTg: "Мурғоб", lat: 38.17, lng: 73.97 },
   { id: "ishkashim", nameEn: "Ishkashim", nameRu: "Ишкашим", nameTg: "Ишкошим", lat: 37.2333, lng: 71.2667 },
   { id: "vanj", nameEn: "Vanj", nameRu: "Ванж", nameTg: "Ванҷ", lat: 38.3833, lng: 73.25 },
