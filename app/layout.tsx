@@ -1,0 +1,38 @@
+import type { Metadata } from "next";
+import { Cinzel, Manrope } from "next/font/google";
+import "./globals.css";
+import { Header } from "@/components/Header";
+import { GoogleAuthProvider } from "@/components/GoogleAuthProvider";
+import { LangAttr } from "@/components/LangAttr";
+import { StoreHydration } from "@/components/StoreHydration";
+
+const display = Cinzel({
+  subsets: ["latin", "latin-ext"],
+  weight: ["500", "600", "700"],
+  variable: "--font-display",
+});
+
+const sans = Manrope({
+  subsets: ["latin", "cyrillic"],
+  variable: "--font-sans",
+});
+
+export const metadata: Metadata = {
+  title: "JERIB — Pamir heritage wear",
+  description: "Custom clothing with Pamir heritage. Design with Jerib — local partners produce and deliver.",
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="ru" className={`${display.variable} ${sans.variable}`}>
+      <body className="min-h-screen bg-ink font-sans text-paper antialiased">
+        <GoogleAuthProvider>
+          <StoreHydration />
+          <LangAttr />
+          <Header />
+          {children}
+        </GoogleAuthProvider>
+      </body>
+    </html>
+  );
+}

@@ -1,0 +1,85 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --jerib-ink: #0a0908;
+  --jerib-paper: #e8dcc8;
+  --jerib-clay: #9c2b2b;
+  --jerib-gold: #c4a574;
+  --jerib-navy: #1a2332;
+}
+
+html,
+body {
+  background: var(--jerib-ink);
+  color: var(--jerib-paper);
+}
+
+body {
+  font-family: var(--font-sans), "Segoe UI", system-ui, sans-serif;
+}
+
+body::before {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  opacity: 0.07;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+
+::selection {
+  background: var(--jerib-clay);
+  color: var(--jerib-paper);
+}
+
+input[type="range"] {
+  accent-color: var(--jerib-clay);
+}
+
+@layer utilities {
+  .text-brand-mark {
+    font-family: var(--font-display), Georgia, serif;
+    font-weight: 600;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: transparent;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Crect width='28' height='28' fill='%23121824'/%3E%3Cpath fill='%23e8dcc8' d='M2 2h5v5H2zm9 0h5v5h-5zm9 0h5v5h-5zM2 11h5v5H2zm9 0h5v5h-5zm9 0h5v5h-5zM2 20h5v5H2zm9 0h5v5h-5zm9 0h5v5h-5z'/%3E%3Cpath fill='%239c2b2b' d='M7 2h4v5H7zm9 0h4v5h-4zM2 7h5v4H2zm9 9h5v4h-5zm9-9h5v4h-5z'/%3E%3Cpath fill='%23c4a574' d='M11 7h5v4h-5zm0-5h2v2h-2z'/%3E%3C/svg%3E");
+    background-size: 0.42em 0.42em;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-stroke: 0.5px rgba(232, 220, 200, 0.35);
+  }
+
+  .text-brand-mark-solid {
+    font-family: var(--font-display), Georgia, serif;
+    font-weight: 600;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--jerib-paper);
+  }
+
+  .text-heritage {
+    font-size: 0.65rem;
+    letter-spacing: 0.42em;
+    text-transform: uppercase;
+    color: var(--jerib-gold);
+  }
+
+  .btn-jerib {
+    background: var(--jerib-paper);
+    color: var(--jerib-ink);
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    font-size: 11px;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+
+  .btn-jerib:hover {
+    background: var(--jerib-clay);
+    color: var(--jerib-paper);
+  }
+}
