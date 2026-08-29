@@ -386,22 +386,84 @@ export function partnerById(partners: Partner[], id: string | null) {
   return partners.find((p) => p.id === id) ?? null;
 }
 
-export function statusLabel(status: PartnerOrderStatus, lang: "en" | "ru" | "tg" = "ru") {
-  const map: Record<PartnerOrderStatus, Record<"en" | "ru" | "tg", string>> = {
-    searching: { en: "Finding partner", ru: "Поиск предприятия", tg: "Ҷустуҷӯи корхона" },
-    offered: { en: "New order", ru: "Новый заказ", tg: "Фармоиши нав" },
-    accepted: { en: "Accepted", ru: "Принят", tg: "Қабул шуд" },
-    in_production: { en: "In production", ru: "В производстве", tg: "Дар истеҳсол" },
-    quality_check: { en: "Quality check", ru: "Проверка качества", tg: "Санҷиши сифат" },
-    ready: { en: "Ready", ru: "Готов", tg: "Тайёр" },
-    packed: { en: "Packed", ru: "Упакован", tg: "Бастабандӣ шуд" },
-    with_courier: { en: "With courier", ru: "Передан курьеру", tg: "Ба хаттак" },
-    delivered: { en: "Delivered", ru: "Доставлен", tg: "Расонда шуд" },
-    failed_no_partner: {
-      en: "No partner available",
-      ru: "Нет доступного предприятия",
-      tg: "Корхона дастрас нест",
-    },
-  };
-  return map[status][lang];
+import type { Lang } from "@/lib/i18n";
+
+const STATUS_LABELS: Record<
+  import("./types").PartnerOrderStatus,
+  Record<Lang, string>
+> = {
+  searching: {
+    en: "Finding partner",
+    es: "Buscando socio",
+    fr: "Recherche de partenaire",
+    de: "Partner wird gesucht",
+    pt: "Procurando parceiro",
+  },
+  offered: {
+    en: "New order",
+    es: "Nuevo pedido",
+    fr: "Nouvelle commande",
+    de: "Neue Bestellung",
+    pt: "Novo pedido",
+  },
+  accepted: {
+    en: "Accepted",
+    es: "Aceptado",
+    fr: "Acceptée",
+    de: "Angenommen",
+    pt: "Aceito",
+  },
+  in_production: {
+    en: "In production",
+    es: "En producción",
+    fr: "En production",
+    de: "In Produktion",
+    pt: "Em produção",
+  },
+  quality_check: {
+    en: "Quality check",
+    es: "Control de calidad",
+    fr: "Contrôle qualité",
+    de: "Qualitätsprüfung",
+    pt: "Controle de qualidade",
+  },
+  ready: {
+    en: "Ready",
+    es: "Listo",
+    fr: "Prêt",
+    de: "Fertig",
+    pt: "Pronto",
+  },
+  packed: {
+    en: "Packed",
+    es: "Empaquetado",
+    fr: "Emballé",
+    de: "Verpackt",
+    pt: "Embalado",
+  },
+  with_courier: {
+    en: "With courier",
+    es: "Con mensajero",
+    fr: "Avec coursier",
+    de: "Beim Kurier",
+    pt: "Com entregador",
+  },
+  delivered: {
+    en: "Delivered",
+    es: "Entregado",
+    fr: "Livré",
+    de: "Zugestellt",
+    pt: "Entregue",
+  },
+  failed_no_partner: {
+    en: "No partner available",
+    es: "Sin socio disponible",
+    fr: "Aucun partenaire disponible",
+    de: "Kein Partner verfügbar",
+    pt: "Nenhum parceiro disponível",
+  },
+};
+
+export function statusLabel(status: import("./types").PartnerOrderStatus, lang: Lang = "en") {
+  return STATUS_LABELS[status][lang] ?? STATUS_LABELS[status].en;
 }

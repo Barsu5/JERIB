@@ -1,3 +1,4 @@
+import type { Lang } from "@/lib/i18n";
 import {
   CITIES,
   COUNTRIES,
@@ -29,10 +30,8 @@ export function countryById(id: CountryId | string) {
   return COUNTRIES.find((c) => c.id === id) ?? COUNTRIES[0];
 }
 
-export function countryLabel(id: CountryId | string, lang: "en" | "ru" | "tg") {
+export function countryLabel(id: CountryId | string, _lang: Lang) {
   const c = countryById(id);
-  if (lang === "ru") return c.nameRu;
-  if (lang === "tg") return c.nameTg;
   return c.nameEn;
 }
 
@@ -49,14 +48,11 @@ export function cityCountryId(id: CityId | string): CountryId {
   return cityById(id).countryId as CountryId;
 }
 
-export function cityLabel(id: CityId | string, lang: "en" | "ru" | "tg") {
-  const c = cityById(id);
-  if (lang === "ru") return c.nameRu;
-  if (lang === "tg") return c.nameTg;
-  return c.nameEn;
+export function cityLabel(id: CityId | string, _lang: Lang) {
+  return cityById(id).nameEn;
 }
 
-export function locationLabel(cityId: CityId | string, lang: "en" | "ru" | "tg") {
+export function locationLabel(cityId: CityId | string, lang: Lang) {
   const city = cityById(cityId);
   return `${cityLabel(city.id, lang)}, ${countryLabel(city.countryId, lang)}`;
 }

@@ -1,4 +1,5 @@
 import { cityLabel, countryLabel, type CityId, type CountryId } from "@/lib/dispatch/cities";
+import type { Lang } from "@/lib/i18n";
 
 export type AddressFields = {
   line1: string;
@@ -117,7 +118,7 @@ export function isAddressValid(fields: AddressFields, countryId: CountryId | str
 
 export function formatDeliveryAddress(
   fields: AddressFields,
-  opts: { cityId: CityId | string; countryId: CountryId | string; lang: "en" | "ru" | "tg" }
+  opts: { cityId: CityId | string; countryId: CountryId | string; lang: Lang }
 ) {
   const city = cityLabel(opts.cityId, opts.lang);
   const country = countryLabel(opts.countryId, opts.lang);
@@ -189,6 +190,6 @@ export function parseDeliveryAddress(raw: string): AddressFields {
   };
 }
 
-export function deliverToLabel(cityId: CityId | string, countryId: CountryId | string, lang: "en" | "ru" | "tg") {
+export function deliverToLabel(cityId: CityId | string, countryId: CountryId | string, lang: Lang) {
   return `${cityLabel(cityId, lang)}, ${countryLabel(countryId, lang)}`;
 }

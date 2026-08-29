@@ -19,12 +19,22 @@ type Props = {
   value: AddressFields;
   onChange: (value: AddressFields) => void;
   required?: boolean;
+  /** delivery = client shipping; company = partner workshop / business */
+  variant?: "delivery" | "company";
 };
 
-export function AddressForm({ countryId, cityId, value, onChange, required = true }: Props) {
+export function AddressForm({
+  countryId,
+  cityId,
+  value,
+  onChange,
+  required = true,
+  variant = "delivery",
+}: Props) {
   const t = useT();
   const lang = useLang((s) => s.lang);
   const layout = addressLayout(countryId);
+  const isCompany = variant === "company";
 
   const set = (patch: Partial<AddressFields>) => onChange({ ...value, ...patch });
 
@@ -44,11 +54,17 @@ export function AddressForm({ countryId, cityId, value, onChange, required = tru
           ? "SW1A 1AA"
           : "10115";
 
+  const locationHint = isCompany
+    ? t("companyLocatedIn")
+    : t("deliverTo");
+
   return (
     <fieldset className="space-y-4">
-      <legend className="text-[10px] uppercase tracking-[0.22em] text-mist">{t("address")}</legend>
+      <legend className="text-[10px] uppercase tracking-[0.22em] text-mist">
+        {isCompany ? t("companyAddress") : t("address")}
+      </legend>
       <p className="text-xs text-mist">
-        {t("deliverTo")}: {deliverToLabel(cityId, countryId, lang)}
+        {locationHint}: {deliverToLabel(cityId, countryId, lang)}
       </p>
 
       <label className="block text-[10px] uppercase tracking-[0.22em] text-mist">
@@ -58,7 +74,7 @@ export function AddressForm({ countryId, cityId, value, onChange, required = tru
           value={value.line1}
           onChange={(e) => set({ line1: e.target.value })}
           placeholder={t("addressLine1Placeholder")}
-          autoComplete="address-line1"
+          autoComplete={isCompany ? "organization" : "address-line1"}
           className={fieldClass}
         />
       </label>

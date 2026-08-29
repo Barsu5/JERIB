@@ -379,7 +379,7 @@ export default function PartnerPanelPage() {
                 [
                   [t("partners"), partner.name],
                   [t("city"), cityLabel(partner.cityId, lang)],
-                  [t("address"), partner.address],
+                  [t("companyAddress"), partner.address],
                   ["GPS", `${partner.lat.toFixed(4)}, ${partner.lng.toFixed(4)}`],
                   [t("serviceRadius"), `${partner.serviceRadiusKm} km`],
                   [t("serviceCities"), partner.serviceCities.map((c) => cityLabel(c, lang)).join(", ")],

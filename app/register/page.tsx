@@ -131,17 +131,6 @@ function RegisterForm() {
             className="mt-2 w-full border border-white/15 bg-transparent px-3 py-3 text-sm outline-none focus:border-clay"
           />
         </label>
-        {role === "partner" && (
-          <label className="block text-[10px] uppercase tracking-[0.22em] text-mist">
-            {t("companyName")}
-            <input
-              required
-              value={companyName}
-              onChange={(e) => setCompanyName(e.target.value)}
-              className="mt-2 w-full border border-white/15 bg-transparent px-3 py-3 text-sm outline-none focus:border-clay"
-            />
-          </label>
-        )}
         <label className="block text-[10px] uppercase tracking-[0.22em] text-mist">
           Email
           <input
@@ -172,21 +161,50 @@ function RegisterForm() {
             className="mt-2 w-full border border-white/15 bg-transparent px-3 py-3 text-sm outline-none focus:border-clay"
           />
         </label>
-        <CountryCitySelect
-          countryId={countryId}
-          cityId={cityId}
-          onCountryChange={setCountryId}
-          onCityChange={(id) => setCityId(normalizeCityId(id))}
-        />
-        <AddressForm
-          countryId={countryId}
-          cityId={cityId}
-          value={addressFields}
-          onChange={setAddressFields}
-          required={role === "partner"}
-        />
-        {role === "partner" && (
-          <p className="text-xs text-mist">{t("partnerRegisterNote")}</p>
+        {role === "partner" ? (
+          <>
+            <label className="block text-[10px] uppercase tracking-[0.22em] text-mist">
+              {t("companyName")}
+              <input
+                required
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                className="mt-2 w-full border border-white/15 bg-transparent px-3 py-3 text-sm outline-none focus:border-clay"
+              />
+            </label>
+            <CountryCitySelect
+              countryId={countryId}
+              cityId={cityId}
+              onCountryChange={setCountryId}
+              onCityChange={(id) => setCityId(normalizeCityId(id))}
+            />
+            <AddressForm
+              countryId={countryId}
+              cityId={cityId}
+              value={addressFields}
+              onChange={setAddressFields}
+              required
+              variant="company"
+            />
+            <p className="text-xs text-mist">{t("partnerRegisterNote")}</p>
+          </>
+        ) : (
+          <>
+            <CountryCitySelect
+              countryId={countryId}
+              cityId={cityId}
+              onCountryChange={setCountryId}
+              onCityChange={(id) => setCityId(normalizeCityId(id))}
+            />
+            <AddressForm
+              countryId={countryId}
+              cityId={cityId}
+              value={addressFields}
+              onChange={setAddressFields}
+              required={false}
+              variant="delivery"
+            />
+          </>
         )}
         {error && <p className="text-sm text-clay">{error}</p>}
         <button
