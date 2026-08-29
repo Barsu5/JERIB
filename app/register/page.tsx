@@ -5,6 +5,14 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import QuickAuth from "@/components/QuickAuth";
 import { CountryCitySelect } from "@/components/CountryCitySelect";
+import { AddressForm } from "@/components/AddressForm";
+import {
+  EMPTY_ADDRESS,
+  formatDeliveryAddress,
+  isAddressValid,
+  parseDeliveryAddress,
+  type AddressFields,
+} from "@/lib/address";
 import {
   DEFAULT_CITY_ID,
   DEFAULT_COUNTRY_ID,
@@ -31,7 +39,7 @@ function RegisterForm() {
   const [password, setPassword] = useState("");
   const [cityId, setCityId] = useState<CityId>(DEFAULT_CITY_ID);
   const [countryId, setCountryId] = useState<CountryId>(DEFAULT_COUNTRY_ID);
-  const [address, setAddress] = useState("");
+  const [addressFields, setAddressFields] = useState<AddressFields>(EMPTY_ADDRESS);
   const [companyName, setCompanyName] = useState("");
   const [error, setError] = useState("");
 
@@ -39,6 +47,10 @@ function RegisterForm() {
     e.preventDefault();
     if (!authReady) return;
     setError("");
+    if (role === "partner" && !isAddressValid(addressFields, countryId)) {
+      setError(t("authInvalid"));
+      return;
+    }
     if (role === "partner") {
       const res = useAuth.getState().registerPartner({
         name,
@@ -47,7 +59,7 @@ function RegisterForm() {
         password,
         cityId,
         companyName,
-        address,
+        address: formatDeliveryAddress(addressFields, { cityId, countryId, lang }),
       });
       if (!res.ok) {
         setError(res.error === "exists" ? t("authEmailExists") : t("authInvalid"));
@@ -56,7 +68,16 @@ function RegisterForm() {
       router.replace(homeForRole("partner"));
       return;
     }
-    const res = useAuth.getState().registerClient({ name, email, phone, password, cityId, address });
+    const res = useAuth.getState().registerClient({
+      name,
+      email,
+      phone,
+      password,
+      cityId,
+      address: addressFields.line1
+        ? formatDeliveryAddress(addressFields, { cityId, countryId, lang })
+        : undefined,
+    });
     if (!res.ok) {
       setError(res.error === "exists" ? t("authEmailExists") : t("authInvalid"));
       return;
@@ -157,16 +178,13 @@ function RegisterForm() {
           onCountryChange={setCountryId}
           onCityChange={(id) => setCityId(normalizeCityId(id))}
         />
-        <label className="block text-[10px] uppercase tracking-[0.22em] text-mist">
-          {t("address")}
-          <textarea
-            required={role === "partner"}
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            rows={3}
-            className="mt-2 w-full border border-white/15 bg-transparent px-3 py-3 text-sm outline-none focus:border-clay"
-          />
-        </label>
+        <AddressForm
+          countryId={countryId}
+          cityId={cityId}
+          value={addressFields}
+          onChange={setAddressFields}
+          required={role === "partner"}
+        />
         {role === "partner" && (
           <p className="text-xs text-mist">{t("partnerRegisterNote")}</p>
         )}

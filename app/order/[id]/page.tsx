@@ -160,7 +160,7 @@ export default function OrderPage() {
         })}
       </ul>
       <p className="mt-8 font-display text-4xl">{formatPrice(order.total)}</p>
-      <p className="mt-2 text-xs text-mist">{order.address}</p>
+      <p className="mt-2 whitespace-pre-line text-xs text-mist">{order.address}</p>
     </main>
   );
 }

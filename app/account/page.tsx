@@ -5,6 +5,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ClientOrderCard, isActiveOrder } from "@/components/ClientOrderCard";
 import { CountryCitySelect } from "@/components/CountryCitySelect";
+import { AddressForm } from "@/components/AddressForm";
+import {
+  EMPTY_ADDRESS,
+  formatDeliveryAddress,
+  isAddressValid,
+  parseDeliveryAddress,
+  type AddressFields,
+} from "@/lib/address";
 import { useSessionUser, useAuth, useAuthHydrated } from "@/lib/auth/store";
 import {
   cityCountryId,
@@ -35,7 +43,7 @@ export default function AccountPage() {
   const [phone, setPhone] = useState("");
   const [cityId, setCityId] = useState<CityId>(DEFAULT_CITY_ID);
   const [countryId, setCountryId] = useState<CountryId>(DEFAULT_COUNTRY_ID);
-  const [address, setAddress] = useState("");
+  const [addressFields, setAddressFields] = useState<AddressFields>(EMPTY_ADDRESS);
   const [saved, setSaved] = useState(false);
   const [ordersTab, setOrdersTab] = useState<OrdersTab>("active");
 
@@ -57,7 +65,7 @@ export default function AccountPage() {
     setPhone(user.phone);
     setCityId(normalizeCityId(user.cityId));
     setCountryId(cityCountryId(user.cityId));
-    setAddress(user.address);
+    setAddressFields(parseDeliveryAddress(user.address));
   }, [user, router, authReady]);
 
   const myOrders = useMemo(() => {
@@ -82,7 +90,13 @@ export default function AccountPage() {
 
   const onSave = (e: FormEvent) => {
     e.preventDefault();
-    updateProfile({ name, phone, cityId, address });
+    if (!isAddressValid(addressFields, countryId)) return;
+    updateProfile({
+      name,
+      phone,
+      cityId,
+      address: formatDeliveryAddress(addressFields, { cityId, countryId, lang }),
+    });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -192,15 +206,12 @@ export default function AccountPage() {
             onCountryChange={setCountryId}
             onCityChange={(id) => setCityId(normalizeCityId(id))}
           />
-          <label className="block text-[10px] uppercase tracking-[0.2em] text-mist">
-            {t("address")}
-            <textarea
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              rows={3}
-              className="mt-2 w-full border border-white/15 bg-transparent px-3 py-3 text-sm outline-none focus:border-clay"
-            />
-          </label>
+          <AddressForm
+            countryId={countryId}
+            cityId={cityId}
+            value={addressFields}
+            onChange={setAddressFields}
+          />
           <button
             type="submit"
             className="w-fit bg-paper px-6 py-3 text-[11px] uppercase tracking-[0.22em] text-ink hover:bg-clay hover:text-paper"

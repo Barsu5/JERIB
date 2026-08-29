@@ -6,6 +6,14 @@ import { useRouter } from "next/navigation";
 import { useSessionUser, useAuthHydrated } from "@/lib/auth/store";
 import { formatPrice } from "@/lib/catalog";
 import { CountryCitySelect } from "@/components/CountryCitySelect";
+import { AddressForm } from "@/components/AddressForm";
+import {
+  EMPTY_ADDRESS,
+  formatDeliveryAddress,
+  isAddressValid,
+  parseDeliveryAddress,
+  type AddressFields,
+} from "@/lib/address";
 import {
   cityById,
   cityCountryId,
@@ -40,7 +48,7 @@ export default function CheckoutPage() {
   const createAndDispatch = useDispatch((s) => s.createAndDispatch);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [address, setAddress] = useState("");
+  const [addressFields, setAddressFields] = useState<AddressFields>(EMPTY_ADDRESS);
   const [cityId, setCityId] = useState<CityId>(DEFAULT_CITY_ID);
   const [countryId, setCountryId] = useState<CountryId>(DEFAULT_COUNTRY_ID);
   const [printMethod, setPrintMethod] = useState<PrintMethod>("dtg");
@@ -49,7 +57,7 @@ export default function CheckoutPage() {
     if (!user) return;
     setName(user.name);
     setEmail(user.email);
-    setAddress(user.address);
+    setAddressFields(parseDeliveryAddress(user.address));
     setCityId(normalizeCityId(user.cityId));
     setCountryId(cityCountryId(user.cityId));
   }, [user]);
@@ -84,12 +92,12 @@ export default function CheckoutPage() {
       router.push("/login?next=/checkout");
       return;
     }
-    if (!cart.length || !quote) return;
+    if (!cart.length || !quote || !isAddressValid(addressFields, countryId)) return;
     const id = createAndDispatch({
       userId: user.id,
       name,
       email,
-      address,
+      address: formatDeliveryAddress(addressFields, { cityId, countryId, lang }),
       cityId,
       items: cart,
       total: quote.total,
@@ -179,16 +187,12 @@ export default function CheckoutPage() {
           onCountryChange={setCountryId}
           onCityChange={(id) => setCityId(normalizeCityId(id))}
         />
-        <label className="block text-[10px] uppercase tracking-[0.22em] text-mist">
-          {t("address")}
-          <textarea
-            required
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            rows={3}
-            className="mt-2 w-full border border-white/15 bg-transparent px-3 py-3 text-sm text-paper outline-none focus:border-clay"
-          />
-        </label>
+        <AddressForm
+          countryId={countryId}
+          cityId={cityId}
+          value={addressFields}
+          onChange={setAddressFields}
+        />
         <label className="block text-[10px] uppercase tracking-[0.22em] text-mist">
           {t("printMethod")}
           <select
