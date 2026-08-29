@@ -1,8 +1,9 @@
 /** Local production partner dispatch — domain types */
 
 import type { CartItem, ProductId } from "@/lib/types";
+import type { City, CityId } from "./cities";
 
-export type CityId = "dushanbe" | "khujand" | "kulob";
+export type { City, CityId };
 
 export type PrintMethod = "dtg" | "screen" | "embroidery" | "vinyl" | "sublimation";
 
@@ -21,15 +22,6 @@ export type PartnerOrderStatus =
   | "failed_no_partner";
 
 export type AssignmentOutcome = "pending" | "accepted" | "expired" | "rejected" | "skipped";
-
-export type City = {
-  id: CityId;
-  nameEn: string;
-  nameRu: string;
-  nameTg: string;
-  lat: number;
-  lng: number;
-};
 
 export type WorkingHours = {
   /** Hour of day 0–23 */

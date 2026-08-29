@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { cityById } from "@/lib/dispatch/cities";
 import { useDispatch } from "@/lib/dispatch/store";
 import type { Partner } from "@/lib/dispatch/types";
 import type {
@@ -258,15 +259,14 @@ export const useAuth = create<AuthState>()(
         }
 
         const partnerId = `p-${uid()}`;
+        const city = cityById(input.cityId);
         const partner: Partner = {
           id: partnerId,
           name: input.companyName.trim(),
           cityId: input.cityId,
           address: input.address.trim(),
-          lat:
-            input.cityId === "khujand" ? 40.2822 : input.cityId === "kulob" ? 37.9144 : 38.5598,
-          lng:
-            input.cityId === "khujand" ? 69.6222 : input.cityId === "kulob" ? 69.7845 : 68.774,
+          lat: city.lat,
+          lng: city.lng,
           serviceRadiusKm: 20,
           serviceCities: [input.cityId],
           acceptsRemoteDelivery: false,
