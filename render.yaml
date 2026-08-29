@@ -1,0 +1,16 @@
+# Render Blueprint: https://dashboard.render.com/select-repo?type=blueprint
+# After deploy, add env var in Render dashboard:
+#   NEXT_PUBLIC_GOOGLE_CLIENT_ID = your Google OAuth client ID
+
+services:
+  - type: web
+    name: jerib
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: NEXT_PUBLIC_GOOGLE_CLIENT_ID
+        sync: false
