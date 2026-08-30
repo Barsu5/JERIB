@@ -5,6 +5,7 @@ import { garmentSvgMarkup, svgToImage } from "./garmentMarkup";
 export type LookDesign = {
   productId: ProductId;
   colorHex: string;
+  partColors?: Record<string, string>;
   layers: DesignLayer[];
   size: string;
 };

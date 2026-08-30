@@ -15,13 +15,79 @@ const TEE =
 const SWEAT =
   "M180 84 C200 84 218 102 220 126 L246 90 C286 114 326 150 334 182 C336 190 324 196 314 192 L278 200 C272 258 264 322 256 362 C254 378 106 378 104 362 C96 322 88 258 82 200 L46 192 C36 196 24 190 26 182 C34 150 74 114 114 90 L140 126 C142 102 160 84 180 84 Z";
 
-export function garmentSvgMarkup(product: ProductId, color: string, view: View) {
+export function garmentSvgMarkup(
+  product: ProductId,
+  color: string,
+  view: View,
+  partColors?: Record<string, string>
+) {
+  const pick = (key: string, fallback = color) => partColors?.[key] ?? fallback;
   const light = shade(color, 36);
   const dark = shade(color, -38);
   const stitch = shade(color, 42);
   const hoodie = product === "hoodie";
   const sweat = product === "sweatshirt" || hoodie;
   const body = sweat ? SWEAT : TEE;
+
+  if (product === "football_jersey") {
+    const bodyColor = pick("body");
+    const sleeveColor = pick("sleeves", shade(bodyColor, -20));
+    const collarColor = pick("collar", shade(bodyColor, 30));
+    const bodyPath =
+      "M180 78 C198 78 212 92 214 110 L236 82 C268 104 302 132 310 158 C312 166 302 170 294 168 L268 176 C262 230 256 290 252 334 C250 350 110 350 108 334 C104 290 98 230 92 176 L66 168 C58 170 48 166 50 158 C58 132 92 104 124 82 L146 110 C148 92 162 78 180 78 Z";
+    const sleeves =
+      view === "front" || view === "sleeves"
+        ? `<path d="M50 158 L92 176 L108 134 L124 82 L92 104 Z" fill="${sleeveColor}"/>
+           <path d="M310 158 L268 176 L252 134 L236 82 L268 104 Z" fill="${sleeveColor}"/>`
+        : "";
+    const collar =
+      view === "front"
+        ? `<path d="M152 112 C162 138 198 138 208 112 L198 104 C188 118 172 118 162 104 Z" fill="${collarColor}"/>`
+        : "";
+    const stripes =
+      view === "back"
+        ? `<rect x="168" y="200" width="24" height="120" fill="${shade(bodyColor, -12)}" opacity="0.35"/>`
+        : "";
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 420">
+      ${sleeves}
+      <path d="${bodyPath}" fill="${bodyColor}"/>
+      ${collar}
+      ${stripes}
+      <path d="${bodyPath}" fill="url(#clothLit)" opacity="0.4"/>
+      <defs>
+        <linearGradient id="clothLit" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="${shade(bodyColor, 36)}" stop-opacity="0.22"/>
+          <stop offset="1" stop-color="${shade(bodyColor, -38)}" stop-opacity="0.28"/>
+        </linearGradient>
+      </defs>
+    </svg>`;
+  }
+
+  if (product === "football_shorts") {
+    const bodyColor = pick("body");
+    const inner =
+      view === "front"
+        ? `<path d="M118 48 C150 44 210 44 242 48 L258 88 C264 180 268 260 270 320 C268 336 198 336 196 320 C188 220 176 160 180 148 C184 160 172 220 164 320 C162 336 92 336 90 320 C92 260 96 180 102 88 Z" fill="${bodyColor}"/>
+           <path d="M180 148 V320" stroke="${shade(bodyColor, -30)}" stroke-width="2"/>`
+        : `<path d="M118 48 C150 44 210 44 242 48 L258 88 C264 180 268 260 270 320 C268 336 198 336 196 320 C188 220 176 160 180 148 C184 160 172 220 164 320 C162 336 92 336 90 320 C92 260 96 180 102 88 Z" fill="${bodyColor}"/>`;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 420">${inner}</svg>`;
+  }
+
+  if (product === "football_socks") {
+    const bodyColor = pick("body");
+    const stripeColor = pick("stripes", shade(bodyColor, 40));
+    const pair =
+      view === "front"
+        ? `<rect x="118" y="60" width="52" height="280" rx="18" fill="${bodyColor}"/>
+           <rect x="190" y="60" width="52" height="280" rx="18" fill="${bodyColor}"/>
+           <rect x="118" y="140" width="52" height="16" fill="${stripeColor}"/>
+           <rect x="190" y="140" width="52" height="16" fill="${stripeColor}"/>
+           <rect x="118" y="200" width="52" height="16" fill="${stripeColor}"/>
+           <rect x="190" y="200" width="52" height="16" fill="${stripeColor}"/>`
+        : `<rect x="118" y="60" width="52" height="280" rx="18" fill="${bodyColor}"/>
+           <rect x="190" y="60" width="52" height="280" rx="18" fill="${bodyColor}"/>`;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 420">${pair}</svg>`;
+  }
 
   if (product === "cap") {
     const inner =

@@ -52,6 +52,23 @@ export const PARTS: Record<ProductId, PartDef[]> = {
     p("seat", "Seat", "back", "torso", 38, 42, 26, 18),
     p("hem_back", "Lower back", "back", "torso", 48, 70, 18, 16),
   ],
+  football_jersey: [
+    p("chest", "Chest", "front", "body", 34, 30, 32, 22),
+    p("sponsor", "Sponsor", "front", "body", 28, 54, 44, 12),
+    ...sleeveZones(),
+    p("back_name", "Player name", "back", "body", 26, 18, 48, 12),
+    p("number_back", "Number", "back", "body", 30, 32, 40, 30),
+  ],
+  football_shorts: [
+    p("thigh_left", "Left thigh", "front", "body", 36, 28, 20, 22),
+    p("thigh_right", "Right thigh", "front", "body", 44, 28, 20, 22),
+    p("logo_back", "Back logo", "back", "body", 38, 22, 24, 16),
+    p("number_back", "Number", "back", "body", 40, 42, 20, 14),
+  ],
+  football_socks: [
+    p("calf_front", "Front", "front", "body", 36, 30, 28, 38),
+    p("calf_back", "Back", "back", "body", 36, 30, 28, 38),
+  ],
 };
 
 export const COLOR_KEYS: Record<ProductId, { id: string; label: string }[]> = {
@@ -60,6 +77,16 @@ export const COLOR_KEYS: Record<ProductId, { id: string; label: string }[]> = {
   hoodie: [{ id: "torso", label: "Torso" }],
   cap: [{ id: "crown", label: "Crown" }],
   pants: [{ id: "torso", label: "Torso" }],
+  football_jersey: [
+    { id: "body", label: "Body" },
+    { id: "sleeves", label: "Sleeves" },
+    { id: "collar", label: "Collar" },
+  ],
+  football_shorts: [{ id: "body", label: "Shorts" }],
+  football_socks: [
+    { id: "body", label: "Sock" },
+    { id: "stripes", label: "Stripes" },
+  ],
 };
 
 export function isSleeveZone(id: string) {

@@ -5,7 +5,19 @@ import { useRouter, useSearchParams } from "next/navigation";
 import type { ProductId } from "@/lib/types";
 import { GarmentSvg } from "@/components/GarmentSvg";
 import { PlacementGuides } from "@/components/PlacementGuides";
-import { COLORS, PATTERNS, PRODUCTS, SIZES, SYMBOLS, colorById, formatPrice, productById } from "@/lib/catalog";
+import { AiDesignPanel } from "@/components/AiDesignPanel";
+import {
+  COLORS,
+  CASUAL_PRODUCTS,
+  FOOTBALL_PRODUCTS,
+  PATTERNS,
+  PRODUCTS,
+  SIZES,
+  SYMBOLS,
+  colorById,
+  formatPrice,
+  productById,
+} from "@/lib/catalog";
 import { useDispatch } from "@/lib/dispatch/store";
 import { useT, type DictKey } from "@/lib/i18n";
 import {
@@ -17,7 +29,7 @@ import {
 } from "@/lib/placement";
 import { minClientUnitPrice } from "@/lib/pricing";
 import { removeImageBackground } from "@/lib/removeBackground";
-import { isSleeveZone, layerVisibleOnView, partsFor, PARTS } from "@/lib/parts";
+import { isSleeveZone, layerVisibleOnView, partsFor, PARTS, COLOR_KEYS } from "@/lib/parts";
 import { useShop, useStudio } from "@/lib/store";
 import type { DesignLayer, LayerKind } from "@/lib/types";
 
@@ -151,7 +163,7 @@ export function Studio() {
   const search = useSearchParams();
   const fileRef = useRef<HTMLInputElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
-  const [tool, setTool] = useState<LayerKind | "color" | null>("text");
+  const [tool, setTool] = useState<LayerKind | "color" | "ai" | null>("text");
   const [text, setText] = useState("JERIB");
   const [removeBg, setRemoveBg] = useState(true);
   const [bgBusy, setBgBusy] = useState(false);
@@ -183,6 +195,9 @@ export function Studio() {
   const moveZone = useStudio((s) => s.moveZone);
   const resetZoneLayout = useStudio((s) => s.resetZoneLayout);
   const resolvedZone = useStudio((s) => s.resolvedZone);
+  const paintPart = useStudio((s) => s.paintPart);
+  const selectedColorKey = useStudio((s) => s.selectedColorKey);
+  const setSelectedColorKey = useStudio((s) => s.setSelectedColorKey);
   const addToCart = useShop((s) => s.addToCart);
 
   useEffect(() => {
@@ -311,32 +326,62 @@ export function Studio() {
     router.push("/look");
   };
 
+  const placeAiImage = (dataUrl: string) => {
+    addLayer("image", dataUrl);
+  };
+
+  const placeFootballName = (name: string) => {
+    const zone = productId === "football_jersey" ? "back_name" : "chest";
+    setPlacement(zone);
+    setView(productId === "football_jersey" ? "back" : "front");
+    addLayer("text", name, "#f3eee6");
+  };
+
+  const placeFootballNumber = (num: string) => {
+    setPlacement("number_back");
+    setView("back");
+    addLayer("text", num, "#f3eee6");
+    queueMicrotask(() => {
+      const id = useStudio.getState().selectedId;
+      if (id) updateLayer(id, { scale: 1.6 });
+    });
+  };
+
+  const renderProductButton = (id: ProductId) => {
+    const p = productById(id);
+    return (
+      <li key={p.id} className="shrink-0">
+        <button
+          type="button"
+          onClick={() => setProduct(p.id)}
+          className={`w-full px-3 py-3 text-left text-sm ${
+            productId === p.id ? "bg-paper text-ink" : "hover:bg-white/5"
+          }`}
+        >
+          <span className="block font-display text-lg">{t(`product_${p.id}` as DictKey)}</span>
+          <span className="text-[11px] text-mist">
+            {(() => {
+              const from = minClientUnitPrice(partners, p.id);
+              return from != null
+                ? t("fromPrice").replace("{price}", formatPrice(from))
+                : formatPrice(p.price);
+            })()}
+          </span>
+        </button>
+      </li>
+    );
+  };
+
   return (
     <div className="grid min-h-screen grid-cols-1 pt-16 lg:grid-cols-[240px_1fr_300px]">
       <aside className="order-2 border-b border-white/10 px-6 py-8 lg:order-1 lg:border-b-0 lg:border-r lg:py-10">
         <p className="mb-4 text-[10px] uppercase tracking-[0.28em] text-mist">{t("chooseProduct")}</p>
         <ul className="flex gap-2 overflow-x-auto pb-2 lg:block lg:space-y-1 lg:overflow-visible lg:pb-0">
-          {PRODUCTS.map((p) => (
-            <li key={p.id} className="shrink-0">
-              <button
-                type="button"
-                onClick={() => setProduct(p.id)}
-                className={`w-full px-3 py-3 text-left text-sm ${
-                  productId === p.id ? "bg-paper text-ink" : "hover:bg-white/5"
-                }`}
-              >
-                <span className="block font-display text-lg">{t(`product_${p.id}` as DictKey)}</span>
-                <span className="text-[11px] text-mist">
-                  {(() => {
-                    const from = minClientUnitPrice(partners, p.id);
-                    return from != null
-                      ? t("fromPrice").replace("{price}", formatPrice(from))
-                      : formatPrice(p.price);
-                  })()}
-                </span>
-              </button>
-            </li>
-          ))}
+          {CASUAL_PRODUCTS.map((id) => renderProductButton(id))}
+        </ul>
+        <p className="mb-2 mt-6 text-[10px] uppercase tracking-[0.28em] text-clay">{t("footballSection")}</p>
+        <ul className="flex gap-2 overflow-x-auto pb-2 lg:block lg:space-y-1 lg:overflow-visible lg:pb-0">
+          {FOOTBALL_PRODUCTS.map((id) => renderProductButton(id))}
         </ul>
       </aside>
 
@@ -376,7 +421,7 @@ export function Studio() {
           className="relative h-[min(72vh,620px)] w-full max-w-[520px]"
         >
           <div className="pointer-events-none absolute inset-0 rounded-full bg-clay/10 blur-3xl" />
-          <GarmentSvg product={productId} color={fabric.hex} view={view} />
+          <GarmentSvg product={productId} color={fabric.hex} partColors={partColors} view={view} />
 
           {showGuides && (
             <PlacementGuides
@@ -505,6 +550,25 @@ export function Studio() {
             ))}
           </div>
           <p className="mt-2 text-xs text-mist">{t(`color_${fabric.id}` as DictKey)}</p>
+          {COLOR_KEYS[productId].length > 1 && (
+            <div className="mt-4 space-y-2">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-mist">{t("kitColors")}</p>
+              {COLOR_KEYS[productId].map((part) => (
+                <label key={part.id} className="flex items-center gap-2 text-xs text-mist">
+                  <input
+                    type="color"
+                    value={partColors[part.id] ?? fabric.hex}
+                    onChange={(e) => {
+                      setSelectedColorKey(part.id);
+                      paintPart(e.target.value);
+                    }}
+                    className="h-8 w-10 bg-transparent"
+                  />
+                  {t(`colorPart_${part.id}` as DictKey)}
+                </label>
+              ))}
+            </div>
+          )}
         </div>
 
         <div>
@@ -629,6 +693,7 @@ export function Studio() {
             {(
               [
                 ["text", "addText"],
+                ["ai", "aiEditor"],
                 ["logo", "logo"],
                 ["image", "image"],
                 ["pattern", "pattern"],
@@ -711,6 +776,15 @@ export function Studio() {
         )}
 
         {tool === "drawing" && <DrawPad onDone={(data) => addLayer("drawing", data)} />}
+
+        {tool === "ai" && (
+          <AiDesignPanel
+            productId={productId}
+            onGenerated={placeAiImage}
+            onAddName={placeFootballName}
+            onAddNumber={placeFootballNumber}
+          />
+        )}
 
         {layers.length > 0 && (
           <div>

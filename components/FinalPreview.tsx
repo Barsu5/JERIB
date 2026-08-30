@@ -137,7 +137,12 @@ export function FinalPreview({
 
   return (
     <div className="relative mx-auto h-full w-full max-w-[520px]">
-      <GarmentSvg product={design.productId} color={design.colorHex} view={view} />
+      <GarmentSvg
+        product={design.productId}
+        color={design.colorHex}
+        partColors={design.partColors}
+        view={view}
+      />
       {marks.map((layer) => (
         <div
           key={layer.id}

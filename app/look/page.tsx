@@ -26,12 +26,14 @@ export default function LookPage() {
     ? {
         productId: last.productId,
         colorHex: colorById(last.colorId).hex,
+        partColors: last.partColors,
         layers: last.layers,
         size: last.size,
       }
     : {
         productId,
         colorHex: colorById(colorId).hex,
+        partColors: useStudio.getState().partColors,
         layers,
         size,
       };

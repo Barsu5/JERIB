@@ -1,4 +1,16 @@
-export type ProductId = "tshirt" | "hoodie" | "sweatshirt" | "cap" | "pants";
+export type ProductId =
+  | "tshirt"
+  | "hoodie"
+  | "sweatshirt"
+  | "cap"
+  | "pants"
+  | "football_jersey"
+  | "football_shorts"
+  | "football_socks";
+
+export function isFootballProduct(id: ProductId) {
+  return id.startsWith("football_");
+}
 export type View = "front" | "back" | "sleeves";
 export type Placement = string;
 export type LayerKind = "text" | "image" | "logo" | "pattern" | "symbol" | "drawing";

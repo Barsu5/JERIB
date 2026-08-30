@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { BrandMark } from "@/components/BrandMark";
-import { PRODUCTS } from "@/lib/catalog";
+import { productById, CASUAL_PRODUCTS, FOOTBALL_PRODUCTS } from "@/lib/catalog";
 import { useT, type DictKey } from "@/lib/i18n";
 
 export default function HomePage() {
@@ -27,7 +27,9 @@ export default function HomePage() {
       <section className="border-t border-white/10 px-6 py-24">
         <p className="mb-12 text-heritage text-mist">{t("chooseProduct")}</p>
         <div className="grid gap-px bg-white/10 sm:grid-cols-2 lg:grid-cols-5">
-          {PRODUCTS.map((p) => (
+          {CASUAL_PRODUCTS.map((id) => {
+            const p = productById(id);
+            return (
             <Link
               key={p.id}
               href={`/studio?product=${p.id}`}
@@ -38,7 +40,29 @@ export default function HomePage() {
               </p>
               <p className="mt-3 text-sm text-mist">{t(`blurb_${p.id}` as DictKey)}</p>
             </Link>
-          ))}
+          );
+          })}
+        </div>
+      </section>
+
+      <section className="border-t border-white/10 px-6 py-24">
+        <p className="mb-12 text-heritage text-mist">{t("footballSection")}</p>
+        <div className="grid gap-px bg-white/10 sm:grid-cols-2 lg:grid-cols-3">
+          {FOOTBALL_PRODUCTS.map((id) => {
+            const p = productById(id);
+            return (
+            <Link
+              key={p.id}
+              href={`/studio?product=${p.id}`}
+              className="bg-ink p-8 transition hover:bg-[#12100e]"
+            >
+              <p className="font-display text-2xl tracking-wide text-paper">
+                {t(`product_${p.id}` as DictKey)}
+              </p>
+              <p className="mt-3 text-sm text-mist">{t(`blurb_${p.id}` as DictKey)}</p>
+            </Link>
+          );
+          })}
         </div>
       </section>
 
