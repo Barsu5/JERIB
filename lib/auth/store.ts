@@ -3,6 +3,14 @@
 import { useEffect, useState } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import {
+  apiLogin,
+  apiLogout,
+  apiRegisterClient,
+  apiRegisterPartner,
+  apiUpdateProfile,
+  ApiError,
+} from "@/lib/api/client";
 import { cityById, normalizeCityId } from "@/lib/dispatch/cities";
 import { useDispatch } from "@/lib/dispatch/store";
 import type { Partner } from "@/lib/dispatch/types";
@@ -192,38 +200,55 @@ function mergeSeedUsers(stored: AuthUser[] | undefined): AuthUser[] {
 type AuthResult = { ok: true; user: PublicUser } | { ok: false; error: string };
 
 type AuthState = {
+  useApi: boolean;
+  sessionUser: PublicUser | null;
   users: AuthUser[];
   sessionUserId: string | null;
-  registerClient: (input: RegisterClientInput) => AuthResult;
-  registerPartner: (input: RegisterPartnerInput) => AuthResult;
-  login: (email: string, password: string) => AuthResult;
-  /** Real Google Sign-In profile (from Google account picker) */
-  loginWithGoogle: (profile: GoogleProfileInput) => AuthResult;
-  /** Demo one-tap for apple / telegram only */
-  loginWithProvider: (provider: Exclude<OAuthProvider, "google">) => AuthResult;
-  /** Phone OTP-style client login (creates account if needed) */
-  loginWithPhone: (phone: string) => AuthResult;
-  logout: () => void;
+  setUseApi: (value: boolean) => void;
+  setSessionUser: (user: PublicUser | null) => void;
+  registerClient: (input: RegisterClientInput) => Promise<AuthResult>;
+  registerPartner: (input: RegisterPartnerInput) => Promise<AuthResult>;
+  login: (email: string, password: string) => Promise<AuthResult>;
+  loginWithGoogle: (profile: GoogleProfileInput) => Promise<AuthResult>;
+  loginWithProvider: (provider: Exclude<OAuthProvider, "google">) => Promise<AuthResult>;
+  loginWithPhone: (phone: string) => Promise<AuthResult>;
+  logout: () => Promise<void>;
   updateProfile: (
     patch: Partial<Pick<AuthUser, "name" | "phone" | "cityId" | "address">>
-  ) => void;
+  ) => Promise<void>;
   currentUser: () => PublicUser | null;
 };
 
 export const useAuth = create<AuthState>()(
   persist(
     (set, get) => ({
+      useApi: false,
+      sessionUser: null,
       users: SEED_USERS,
       sessionUserId: null,
 
+      setUseApi: (value) => set({ useApi: value }),
+      setSessionUser: (user) => set({ sessionUser: user }),
+
       currentUser: () => {
+        if (get().useApi) return get().sessionUser;
         const id = get().sessionUserId;
         if (!id) return null;
         const u = get().users.find((x) => x.id === id);
         return u ? toPublic(u) : null;
       },
 
-      registerClient: (input) => {
+      registerClient: async (input) => {
+        if (get().useApi) {
+          try {
+            const { user } = await apiRegisterClient(input);
+            set({ sessionUser: user });
+            return { ok: true, user };
+          } catch (e) {
+            if (e instanceof ApiError && e.body.error === "exists") return { ok: false, error: "exists" };
+            return { ok: false, error: "invalid" };
+          }
+        }
         const email = input.email.trim().toLowerCase();
         if (!email || !input.password || input.password.length < 6) {
           return { ok: false, error: "invalid" };
@@ -249,7 +274,18 @@ export const useAuth = create<AuthState>()(
         return { ok: true, user: toPublic(user) };
       },
 
-      registerPartner: (input) => {
+      registerPartner: async (input) => {
+        if (get().useApi) {
+          try {
+            const { user } = await apiRegisterPartner(input);
+            set({ sessionUser: user });
+            if (user.partnerId) useDispatch.setState({ activePartnerId: user.partnerId });
+            return { ok: true, user };
+          } catch (e) {
+            if (e instanceof ApiError && e.body.error === "exists") return { ok: false, error: "exists" };
+            return { ok: false, error: "invalid" };
+          }
+        }
         const email = input.email.trim().toLowerCase();
         if (!email || !input.password || input.password.length < 6) {
           return { ok: false, error: "invalid" };
@@ -309,7 +345,19 @@ export const useAuth = create<AuthState>()(
         return { ok: true, user: toPublic(user) };
       },
 
-      login: (email, password) => {
+      login: async (email, password) => {
+        if (get().useApi) {
+          try {
+            const { user } = await apiLogin(email, password);
+            set({ sessionUser: user });
+            if (user.role === "partner" && user.partnerId) {
+              useDispatch.setState({ activePartnerId: user.partnerId });
+            }
+            return { ok: true, user };
+          } catch {
+            return { ok: false, error: "credentials" };
+          }
+        }
         const e = email.trim().toLowerCase();
         const user = get().users.find((u) => u.email === e);
         if (!user || user.passwordHash !== hashPassword(password)) {
@@ -322,7 +370,7 @@ export const useAuth = create<AuthState>()(
         return { ok: true, user: toPublic(user) };
       },
 
-      loginWithGoogle: (profile) => {
+      loginWithGoogle: async (profile) => {
         const email = profile.email.trim().toLowerCase();
         const sub = profile.sub.trim();
         const name = (profile.name || email.split("@")[0] || "Google").trim();
@@ -379,7 +427,7 @@ export const useAuth = create<AuthState>()(
         return { ok: true, user: toPublic(user) };
       },
 
-      loginWithProvider: (provider) => {
+      loginWithProvider: async (provider) => {
         const profile = OAUTH_PROFILES[provider];
         const existing = get().users.find(
           (u) => u.provider === provider && u.providerId === profile.providerId
@@ -418,7 +466,7 @@ export const useAuth = create<AuthState>()(
         return { ok: true, user: toPublic(user) };
       },
 
-      loginWithPhone: (phone) => {
+      loginWithPhone: async (phone) => {
         const normalized = normalizePhone(phone);
         if (normalized.replace(/\D/g, "").length < 9) {
           return { ok: false, error: "invalid" };
@@ -458,9 +506,21 @@ export const useAuth = create<AuthState>()(
         return { ok: true, user: toPublic(user) };
       },
 
-      logout: () => set({ sessionUserId: null }),
+      logout: async () => {
+        if (get().useApi) {
+          await apiLogout().catch(() => undefined);
+          set({ sessionUser: null });
+          return;
+        }
+        set({ sessionUserId: null });
+      },
 
-      updateProfile: (patch) => {
+      updateProfile: async (patch) => {
+        if (get().useApi) {
+          const { user } = await apiUpdateProfile(patch);
+          set({ sessionUser: user });
+          return;
+        }
         const id = get().sessionUserId;
         if (!id) return;
         set({
@@ -504,8 +564,11 @@ export function useAuthHydrated() {
 }
 
 export function useSessionUser(): PublicUser | null {
+  const useApi = useAuth((s) => s.useApi);
+  const sessionUser = useAuth((s) => s.sessionUser);
   const sessionUserId = useAuth((s) => s.sessionUserId);
   const users = useAuth((s) => s.users);
+  if (useApi) return sessionUser;
   if (!sessionUserId) return null;
   const u = users.find((x) => x.id === sessionUserId);
   return u ? toPublic(u) : null;

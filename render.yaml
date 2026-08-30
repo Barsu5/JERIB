@@ -1,6 +1,8 @@
 # Render Blueprint: https://dashboard.render.com/select-repo?type=blueprint
-# After deploy, add env var in Render dashboard:
-#   NEXT_PUBLIC_GOOGLE_CLIENT_ID = your Google OAuth client ID
+# After deploy, add env vars in Render dashboard:
+#   DATABASE_URL          — from Render PostgreSQL or external provider
+#   JWT_SECRET            — long random string
+#   NEXT_PUBLIC_GOOGLE_CLIENT_ID
 
 services:
   - type: web
@@ -12,5 +14,15 @@ services:
     envVars:
       - key: NODE_VERSION
         value: "20"
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
       - key: NEXT_PUBLIC_GOOGLE_CLIENT_ID
         sync: false
+
+databases:
+  - name: jerib-db
+    plan: free
+    databaseName: jerib
+    user: jerib

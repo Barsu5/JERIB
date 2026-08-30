@@ -21,9 +21,9 @@ export default function LoginInner() {
     router.replace(next || homeForRole(role));
   };
 
-  const go = (mail: string, pass: string) => {
+  const go = async (mail: string, pass: string) => {
     if (!authReady) return;
-    const res = useAuth.getState().login(mail, pass);
+    const res = await useAuth.getState().login(mail, pass);
     if (!res.ok) {
       setError(t("authBadCredentials"));
       return;
@@ -31,9 +31,9 @@ export default function LoginInner() {
     afterAuth(res.user.role);
   };
 
-  const onSubmit = (e: FormEvent) => {
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    go(email, password);
+    await go(email, password);
   };
 
   return (
@@ -99,7 +99,7 @@ export default function LoginInner() {
                   setEmail(acc.email);
                   setPassword(acc.password);
                   setError("");
-                  go(acc.email, acc.password);
+                  void go(acc.email, acc.password);
                 }}
                 className={`w-full border px-3 py-3 text-left transition hover:border-clay disabled:opacity-50 ${
                   acc.role === "partner" ? "border-clay/50 text-paper" : "border-white/15"

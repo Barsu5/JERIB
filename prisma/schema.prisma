@@ -1,0 +1,131 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  client
+  partner
+  admin
+}
+
+enum AuthProvider {
+  email
+  google
+  apple
+  telegram
+  phone
+}
+
+enum PartnerApproval {
+  pending
+  approved
+  blocked
+}
+
+enum PartnerOrderStatus {
+  searching
+  offered
+  accepted
+  in_production
+  quality_check
+  ready
+  packed
+  with_courier
+  delivered
+  failed_no_partner
+}
+
+model User {
+  id           String       @id @default(cuid())
+  role         UserRole     @default(client)
+  name         String
+  email        String       @unique
+  phone        String       @default("")
+  passwordHash String
+  cityId       String       @default("us_new_york")
+  address      String       @default("")
+  provider     AuthProvider @default(email)
+  providerId   String?
+  partnerId    String?      @unique
+  partner      Partner?     @relation(fields: [partnerId], references: [id], onDelete: SetNull)
+  orders       Order[]
+  createdAt    DateTime     @default(now())
+
+  @@index([provider, providerId])
+}
+
+model Partner {
+  id                    String          @id
+  name                  String
+  cityId                String
+  address               String
+  lat                   Float
+  lng                   Float
+  serviceRadiusKm       Int
+  serviceCities         String[]
+  acceptsRemoteDelivery Boolean         @default(false)
+  printMethods          String[]
+  products              String[]
+  productionPrices      Json
+  minOrderQty           Int             @default(1)
+  capacityUnits         Int
+  avgProductionHours    Int
+  workingHours          Json
+  currentLoad           Float           @default(0)
+  rating                Float
+  qualityScore          Float
+  completionRate        Float
+  cancelRate            Float
+  acceptingOrders       Boolean         @default(false)
+  approval              PartnerApproval @default(pending)
+  commissionOverride    Float?
+  createdAt             DateTime        @default(now())
+  user                  User?
+  orders                Order[]
+}
+
+model Order {
+  id                String             @id
+  userId            String?
+  user              User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  name              String
+  email             String
+  address           String
+  cityId            String
+  clientLat         Float
+  clientLng         Float
+  items             Json
+  total             Float
+  printMethod       String
+  deadlineAt        DateTime
+  partnerId         String?
+  partner           Partner?           @relation(fields: [partnerId], references: [id], onDelete: SetNull)
+  status            PartnerOrderStatus @default(searching)
+  statusHistory     Json
+  assignmentHistory Json
+  offerExpiresAt    DateTime?
+  finance           Json?
+  adminAlert        Boolean            @default(false)
+  clientAlert       Boolean            @default(false)
+  notes             String             @default("")
+  createdAt         DateTime           @default(now())
+
+  @@index([userId])
+  @@index([partnerId])
+  @@index([status])
+}
+
+model PlatformSettings {
+  id                    Int   @id @default(1)
+  acceptTimeoutMs       Int
+  paymentFeeRate        Float
+  defaultDeliveryCost   Float
+  defaultCommissionRate Float
+  otherCostFlat         Float
+  scoring               Json
+}

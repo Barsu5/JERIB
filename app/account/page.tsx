@@ -88,10 +88,10 @@ export default function AccountPage() {
     );
   }
 
-  const onSave = (e: FormEvent) => {
+  const onSave = async (e: FormEvent) => {
     e.preventDefault();
     if (!isAddressValid(addressFields, countryId)) return;
-    updateProfile({
+    await updateProfile({
       name,
       phone,
       cityId,

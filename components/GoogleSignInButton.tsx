@@ -25,6 +25,7 @@ export function GoogleSignInButton({ disabled, busy, onBusy, onSuccess, onError 
         const res = await fetch("/api/auth/google", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({ accessToken: tokenResponse.access_token }),
         });
         const data = (await res.json()) as {
@@ -32,12 +33,20 @@ export function GoogleSignInButton({ disabled, busy, onBusy, onSuccess, onError 
           email?: string;
           name?: string;
           picture?: string | null;
+          user?: PublicUser;
         };
         if (!res.ok || !data.sub || !data.email) {
           onError(t("googleAuthFailed"));
           return;
         }
-        const auth = useAuth.getState().loginWithGoogle({
+        if (data.user) {
+          useAuth.getState().setSessionUser(data.user);
+          if (useAuth.getState().useApi) {
+            onSuccess(data.user);
+            return;
+          }
+        }
+        const auth = await useAuth.getState().loginWithGoogle({
           sub: data.sub,
           email: data.email,
           name: data.name || data.email,

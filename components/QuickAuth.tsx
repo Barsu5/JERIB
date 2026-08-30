@@ -39,7 +39,7 @@ export default function QuickAuth({ onSuccess, onError }: Props) {
     setBusy(provider);
     try {
       await wait(350);
-      const res = useAuth.getState().loginWithProvider(provider);
+      const res = await useAuth.getState().loginWithProvider(provider);
       if (!res.ok) {
         fail(t("authInvalid"));
         return;
@@ -59,7 +59,7 @@ export default function QuickAuth({ onSuccess, onError }: Props) {
     setBusy("phone");
     try {
       await wait(350);
-      const res = useAuth.getState().loginWithPhone(phone);
+      const res = await useAuth.getState().loginWithPhone(phone);
       if (!res.ok) {
         fail(res.error === "invalid" ? t("authPhoneInvalid") : t("authInvalid"));
         return;

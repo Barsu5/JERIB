@@ -86,14 +86,14 @@ export default function CheckoutPage() {
     return { partner: best.partner, ...totals };
   }, [cart, cityId, printMethod, partners, settings]);
 
-  const onSubmit = (e: FormEvent) => {
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!user || user.role !== "client") {
       router.push("/login?next=/checkout");
       return;
     }
     if (!cart.length || !quote || !isAddressValid(addressFields, countryId)) return;
-    const id = createAndDispatch({
+    const id = await createAndDispatch({
       userId: user.id,
       name,
       email,

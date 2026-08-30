@@ -43,7 +43,7 @@ function RegisterForm() {
   const [companyName, setCompanyName] = useState("");
   const [error, setError] = useState("");
 
-  const onSubmit = (e: FormEvent) => {
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!authReady) return;
     setError("");
@@ -52,7 +52,7 @@ function RegisterForm() {
       return;
     }
     if (role === "partner") {
-      const res = useAuth.getState().registerPartner({
+      const res = await useAuth.getState().registerPartner({
         name,
         email,
         phone,
@@ -68,7 +68,7 @@ function RegisterForm() {
       router.replace(homeForRole("partner"));
       return;
     }
-    const res = useAuth.getState().registerClient({
+    const res = await useAuth.getState().registerClient({
       name,
       email,
       phone,

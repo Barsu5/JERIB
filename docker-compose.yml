@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: jerib
+      POSTGRES_PASSWORD: jerib
+      POSTGRES_DB: jerib
+    volumes:
+      - jerib_pg:/var/lib/postgresql/data
+
+volumes:
+  jerib_pg:

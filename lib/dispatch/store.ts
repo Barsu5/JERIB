@@ -2,6 +2,14 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import {
+  apiCreateOrder,
+  apiDispatchTick,
+  apiOrderAction,
+  apiSetPartnerApproval,
+  apiUpdatePartner,
+  apiUpdateSettings,
+} from "@/lib/api/client";
 import type { CartItem } from "@/lib/types";
 import { cityById } from "./cities";
 import { calcFinance } from "./finance";
@@ -105,10 +113,12 @@ function tryAssign(order: DispatchOrder, partners: Partner[], settings: Platform
 }
 
 type DispatchState = {
+  useApi: boolean;
   partners: Partner[];
   orders: DispatchOrder[];
   settings: PlatformSettings;
   activePartnerId: string | null;
+  setUseApi: (value: boolean) => void;
   setActivePartner: (id: string | null) => void;
   /** Create order + auto-dispatch to best partner */
   createAndDispatch: (input: {
@@ -120,20 +130,20 @@ type DispatchState = {
     items: CartItem[];
     total: number;
     printMethod?: PrintMethod;
-  }) => string;
+  }) => string | Promise<string>;
   /** Expire stale offers and cascade */
-  tickDispatch: () => void;
-  partnerAccept: (orderId: string, partnerId: string) => void;
-  partnerReject: (orderId: string, partnerId: string) => void;
-  partnerAdvance: (orderId: string, partnerId: string) => void;
-  adminReassign: (orderId: string, partnerId: string) => void;
-  adminSetPartnerApproval: (partnerId: string, approval: PartnerApproval) => void;
-  adminToggleAccepting: (partnerId: string) => void;
-  adminUpdatePartner: (partnerId: string, patch: Partial<Partner>) => void;
+  tickDispatch: () => void | Promise<void>;
+  partnerAccept: (orderId: string, partnerId: string) => void | Promise<void>;
+  partnerReject: (orderId: string, partnerId: string) => void | Promise<void>;
+  partnerAdvance: (orderId: string, partnerId: string) => void | Promise<void>;
+  adminReassign: (orderId: string, partnerId: string) => void | Promise<void>;
+  adminSetPartnerApproval: (partnerId: string, approval: PartnerApproval) => void | Promise<void>;
+  adminToggleAccepting: (partnerId: string) => void | Promise<void>;
+  adminUpdatePartner: (partnerId: string, patch: Partial<Partner>) => void | Promise<void>;
   adminAddPartner: (partner: Omit<Partner, "id" | "createdAt">) => string;
-  adminSetSettings: (patch: Partial<PlatformSettings>) => void;
-  adminSetLoad: (partnerId: string, load: number) => void;
-  adminMarkPayoutPaid: (orderId: string) => void;
+  adminSetSettings: (patch: Partial<PlatformSettings>) => void | Promise<void>;
+  adminSetLoad: (partnerId: string, load: number) => void | Promise<void>;
+  adminMarkPayoutPaid: (orderId: string) => void | Promise<void>;
   /** Demo: force-expire current offer immediately */
   forceExpireOffer: (orderId: string) => void;
 };
@@ -150,14 +160,29 @@ const NEXT_STATUS: Partial<Record<PartnerOrderStatus, PartnerOrderStatus>> = {
 export const useDispatch = create<DispatchState>()(
   persist(
     (set, get) => ({
+      useApi: false,
       partners: SEED_PARTNERS,
       orders: [],
       settings: DEFAULT_SETTINGS,
       activePartnerId: null,
 
+      setUseApi: (value) => set({ useApi: value }),
       setActivePartner: (id) => set({ activePartnerId: id }),
 
-      createAndDispatch: ({ name, email, address, cityId, items, total, printMethod = "dtg", userId = null }) => {
+      createAndDispatch: async ({ name, email, address, cityId, items, total, printMethod = "dtg", userId = null }) => {
+        if (get().useApi) {
+          const { order } = await apiCreateOrder({
+            name,
+            email,
+            address,
+            cityId,
+            items,
+            total,
+            printMethod,
+          });
+          set({ orders: [order, ...get().orders] });
+          return order.id;
+        }
         const city = cityById(cityId);
         const id = `JR-${uid().toUpperCase()}`;
         const now = Date.now();
@@ -190,7 +215,12 @@ export const useDispatch = create<DispatchState>()(
         return id;
       },
 
-      tickDispatch: () => {
+      tickDispatch: async () => {
+        if (get().useApi) {
+          const { orders } = await apiDispatchTick();
+          set({ orders });
+          return;
+        }
         const now = Date.now();
         const { partners, settings } = get();
         let changed = false;
@@ -208,7 +238,12 @@ export const useDispatch = create<DispatchState>()(
         if (changed) set({ orders });
       },
 
-      partnerAccept: (orderId, partnerId) => {
+      partnerAccept: async (orderId, partnerId) => {
+        if (get().useApi) {
+          const { order } = await apiOrderAction(orderId, "accept");
+          set({ orders: get().orders.map((o) => (o.id === orderId ? order : o)) });
+          return;
+        }
         const { partners, settings, orders } = get();
         const order = orders.find((o) => o.id === orderId);
         if (!order || order.partnerId !== partnerId || order.status !== "offered") return;
@@ -239,7 +274,12 @@ export const useDispatch = create<DispatchState>()(
         });
       },
 
-      partnerReject: (orderId, partnerId) => {
+      partnerReject: async (orderId, partnerId) => {
+        if (get().useApi) {
+          const { order } = await apiOrderAction(orderId, "reject");
+          set({ orders: get().orders.map((o) => (o.id === orderId ? order : o)) });
+          return;
+        }
         const now = Date.now();
         const { partners, settings } = get();
         set({
@@ -260,7 +300,12 @@ export const useDispatch = create<DispatchState>()(
         });
       },
 
-      partnerAdvance: (orderId, partnerId) => {
+      partnerAdvance: async (orderId, partnerId) => {
+        if (get().useApi) {
+          const { order } = await apiOrderAction(orderId, "advance");
+          set({ orders: get().orders.map((o) => (o.id === orderId ? order : o)) });
+          return;
+        }
         const { orders, partners } = get();
         const order = orders.find((o) => o.id === orderId);
         if (!order || order.partnerId !== partnerId) return;
@@ -279,7 +324,12 @@ export const useDispatch = create<DispatchState>()(
         });
       },
 
-      adminReassign: (orderId, partnerId) => {
+      adminReassign: async (orderId, partnerId) => {
+        if (get().useApi) {
+          const { order } = await apiOrderAction(orderId, "reassign", { partnerId });
+          set({ orders: get().orders.map((o) => (o.id === orderId ? order : o)) });
+          return;
+        }
         const now = Date.now();
         const partner = get().partners.find((p) => p.id === partnerId);
         if (!partner) return;
@@ -312,22 +362,30 @@ export const useDispatch = create<DispatchState>()(
         });
       },
 
-      adminSetPartnerApproval: (partnerId, approval) =>
+      adminSetPartnerApproval: async (partnerId, approval) => {
+        if (get().useApi) {
+          const { partner } = await apiSetPartnerApproval(partnerId, approval);
+          set({ partners: get().partners.map((p) => (p.id === partnerId ? partner : p)) });
+          return;
+        }
         set({
           partners: get().partners.map((p) => (p.id === partnerId ? { ...p, approval } : p)),
-        }),
+        });
+      },
 
-      adminToggleAccepting: (partnerId) =>
+      adminToggleAccepting: (partnerId) => {
         set({
           partners: get().partners.map((p) =>
             p.id === partnerId ? { ...p, acceptingOrders: !p.acceptingOrders } : p
           ),
-        }),
+        });
+      },
 
-      adminUpdatePartner: (partnerId, patch) =>
+      adminUpdatePartner: (partnerId, patch) => {
         set({
           partners: get().partners.map((p) => (p.id === partnerId ? { ...p, ...patch } : p)),
-        }),
+        });
+      },
 
       adminAddPartner: (data) => {
         const id = `p-${uid()}`;
@@ -336,16 +394,29 @@ export const useDispatch = create<DispatchState>()(
         return id;
       },
 
-      adminSetSettings: (patch) => set({ settings: { ...get().settings, ...patch } }),
+      adminSetSettings: async (patch) => {
+        if (get().useApi) {
+          const { settings } = await apiUpdateSettings(patch);
+          set({ settings });
+          return;
+        }
+        set({ settings: { ...get().settings, ...patch } });
+      },
 
-      adminSetLoad: (partnerId, load) =>
+      adminSetLoad: (partnerId, load) => {
         set({
           partners: get().partners.map((p) =>
             p.id === partnerId ? { ...p, currentLoad: Math.max(0, Math.min(1, load)) } : p
           ),
-        }),
+        });
+      },
 
-      adminMarkPayoutPaid: (orderId) =>
+      adminMarkPayoutPaid: async (orderId) => {
+        if (get().useApi) {
+          const { order } = await apiOrderAction(orderId, "markPaid");
+          set({ orders: get().orders.map((o) => (o.id === orderId ? order : o)) });
+          return;
+        }
         set({
           orders: get().orders.map((o) => {
             if (o.id !== orderId || !o.finance) return o;
@@ -354,7 +425,8 @@ export const useDispatch = create<DispatchState>()(
               finance: { ...o.finance, payoutStatus: "paid", paidAt: Date.now() },
             };
           }),
-        }),
+        });
+      },
 
       forceExpireOffer: (orderId) => {
         const now = Date.now();
