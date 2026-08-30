@@ -1,4 +1,5 @@
 import { ApiError } from "@/lib/api/client";
+import type { AddressValidationIssue } from "@/lib/address";
 import type { DictKey } from "@/lib/i18n";
 
 export type AuthErrorCode =
@@ -42,5 +43,20 @@ export function authErrorKey(code: AuthErrorCode): DictKey {
       return "authServerError";
     default:
       return "authInvalid";
+  }
+}
+
+export function addressIssueKey(issue: AddressValidationIssue): DictKey {
+  switch (issue) {
+    case "line1":
+      return "authAddressMissingStreet";
+    case "state":
+      return "authAddressMissingState";
+    case "postal":
+      return "authAddressMissingPostal";
+    case "postalFormat":
+      return "authAddressInvalidPostal";
+    default:
+      return "authAddressInvalid";
   }
 }

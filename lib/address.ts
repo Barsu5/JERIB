@@ -108,12 +108,27 @@ export function addressLayout(countryId: CountryId | string): AddressLayout {
 }
 
 export function isAddressValid(fields: AddressFields, countryId: CountryId | string) {
+  return validateAddress(fields, countryId).valid;
+}
+
+export type AddressValidationIssue = "line1" | "state" | "postal" | "postalFormat";
+
+export function validateAddress(
+  fields: AddressFields,
+  countryId: CountryId | string
+): { valid: true } | { valid: false; issue: AddressValidationIssue } {
   const layout = addressLayout(countryId);
-  if (!fields.line1.trim()) return false;
-  if (!fields.postalCode.trim()) return false;
-  if (layout.showState && !fields.state.trim()) return false;
-  if (layout.postalStyle === "us" && !/^\d{5}(-\d{4})?$/.test(fields.postalCode.trim())) return false;
-  return true;
+  if (!fields.line1.trim()) return { valid: false, issue: "line1" };
+  if (layout.showState && !fields.state.trim()) return { valid: false, issue: "state" };
+  const postal = fields.postalCode.trim();
+  if (!postal) return { valid: false, issue: "postal" };
+  if (layout.postalStyle === "us") {
+    const normalized = postal.replace(/\s/g, "");
+    if (!/^\d{5}(-\d{4})?$/.test(normalized)) {
+      return { valid: false, issue: "postalFormat" };
+    }
+  }
+  return { valid: true };
 }
 
 export function formatDeliveryAddress(

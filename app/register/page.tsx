@@ -9,8 +9,7 @@ import { AddressForm } from "@/components/AddressForm";
 import {
   EMPTY_ADDRESS,
   formatDeliveryAddress,
-  isAddressValid,
-  parseDeliveryAddress,
+  validateAddress,
   type AddressFields,
 } from "@/lib/address";
 import {
@@ -21,7 +20,7 @@ import {
   type CountryId,
 } from "@/lib/dispatch/cities";
 import { homeForRole, useAuth, useAuthHydrated } from "@/lib/auth/store";
-import { authErrorKey } from "@/lib/auth/errors";
+import { addressIssueKey, authErrorKey } from "@/lib/auth/errors";
 import type { UserRole } from "@/lib/auth/types";
 import { useLang, useT } from "@/lib/i18n";
 
@@ -45,9 +44,13 @@ function RegisterForm() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const onSubmit = async (e: FormEvent) => {
+  const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!authReady || submitting) return;
+
+    const form = e.currentTarget;
+    if (!form.reportValidity()) return;
+
     setSubmitting(true);
     setError("");
     try {
@@ -55,11 +58,12 @@ function RegisterForm() {
         setError(t("authPasswordShort"));
         return;
       }
-      if (role === "partner" && !isAddressValid(addressFields, countryId)) {
-        setError(t("authAddressInvalid"));
-        return;
-      }
       if (role === "partner") {
+        const addressCheck = validateAddress(addressFields, countryId);
+        if (!addressCheck.valid) {
+          setError(t(addressIssueKey(addressCheck.issue)));
+          return;
+        }
         const res = await useAuth.getState().registerPartner({
           name: name.trim(),
           email: email.trim().toLowerCase(),
