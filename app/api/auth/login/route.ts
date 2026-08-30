@@ -6,7 +6,7 @@ import { dbUnavailable, badRequest } from "@/lib/server/db-error";
 import { toPublicUser } from "@/lib/server/mappers";
 
 const schema = z.object({
-  email: z.string().email(),
+  email: z.string().trim().email(),
   password: z.string().min(1),
 });
 

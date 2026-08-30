@@ -9,9 +9,9 @@ import {
   apiRegisterClient,
   apiRegisterPartner,
   apiUpdateProfile,
-  ApiError,
 } from "@/lib/api/client";
 import { applyApiSession, ensureAuthBootstrap, syncDispatchForUser } from "@/lib/api/bootstrap";
+import { mapAuthApiError, type AuthErrorCode } from "@/lib/auth/errors";
 import { cityById, normalizeCityId } from "@/lib/dispatch/cities";
 import { useDispatch } from "@/lib/dispatch/store";
 import type { Partner } from "@/lib/dispatch/types";
@@ -198,7 +198,7 @@ function mergeSeedUsers(stored: AuthUser[] | undefined): AuthUser[] {
   return list;
 }
 
-type AuthResult = { ok: true; user: PublicUser } | { ok: false; error: string };
+type AuthResult = { ok: true; user: PublicUser } | { ok: false; error: AuthErrorCode };
 
 type AuthState = {
   useApi: boolean;
@@ -248,13 +248,12 @@ export const useAuth = create<AuthState>()(
             await syncDispatchForUser(user);
             return { ok: true, user };
           } catch (e) {
-            if (e instanceof ApiError && e.body.error === "exists") return { ok: false, error: "exists" };
-            return { ok: false, error: "invalid" };
+            return { ok: false, error: mapAuthApiError(e) };
           }
         }
         const email = input.email.trim().toLowerCase();
-        if (!email || !input.password || input.password.length < 6) {
-          return { ok: false, error: "invalid" };
+        if (!email || input.password.length < 6) {
+          return { ok: false, error: input.password.length < 6 ? "password" : "invalid" };
         }
         if (get().users.some((u) => u.email === email)) {
           return { ok: false, error: "exists" };
@@ -286,13 +285,12 @@ export const useAuth = create<AuthState>()(
             await syncDispatchForUser(user);
             return { ok: true, user };
           } catch (e) {
-            if (e instanceof ApiError && e.body.error === "exists") return { ok: false, error: "exists" };
-            return { ok: false, error: "invalid" };
+            return { ok: false, error: mapAuthApiError(e) };
           }
         }
         const email = input.email.trim().toLowerCase();
-        if (!email || !input.password || input.password.length < 6) {
-          return { ok: false, error: "invalid" };
+        if (!email || input.password.length < 6) {
+          return { ok: false, error: input.password.length < 6 ? "password" : "invalid" };
         }
         if (get().users.some((u) => u.email === email)) {
           return { ok: false, error: "exists" };
@@ -357,8 +355,8 @@ export const useAuth = create<AuthState>()(
             applyApiSession(user);
             await syncDispatchForUser(user);
             return { ok: true, user };
-          } catch {
-            return { ok: false, error: "credentials" };
+          } catch (e) {
+            return { ok: false, error: mapAuthApiError(e) };
           }
         }
         const e = email.trim().toLowerCase();

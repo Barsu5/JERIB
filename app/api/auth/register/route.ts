@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { normalizeCityId } from "@/lib/dispatch/cities";
@@ -9,23 +10,23 @@ import { partnerToDb } from "@/lib/server/dispatch";
 
 const clientSchema = z.object({
   role: z.literal("client").optional(),
-  name: z.string().min(1),
-  email: z.string().email(),
-  phone: z.string().optional(),
+  name: z.string().trim().min(1),
+  email: z.string().trim().email(),
+  phone: z.string().trim().optional(),
   password: z.string().min(6),
-  cityId: z.string(),
-  address: z.string().optional(),
+  cityId: z.string().min(1),
+  address: z.string().trim().optional(),
 });
 
 const partnerSchema = z.object({
   role: z.literal("partner"),
-  name: z.string().min(1),
-  email: z.string().email(),
-  phone: z.string().optional(),
+  name: z.string().trim().min(1),
+  email: z.string().trim().email(),
+  phone: z.string().trim().optional(),
   password: z.string().min(6),
-  cityId: z.string(),
-  companyName: z.string().min(1),
-  address: z.string().min(1),
+  cityId: z.string().min(1),
+  companyName: z.string().trim().min(1),
+  address: z.string().trim().min(1),
 });
 
 export async function POST(req: Request) {
@@ -114,7 +115,11 @@ export async function POST(req: Request) {
 
     await setSessionCookie(user.id);
     return NextResponse.json({ user: toPublicUser(user) });
-  } catch {
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+      return NextResponse.json({ error: "exists" }, { status: 409 });
+    }
+    console.error("register error:", e);
     return NextResponse.json({ error: "server_error" }, { status: 500 });
   }
 }

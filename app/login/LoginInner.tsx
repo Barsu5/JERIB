@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import QuickAuth from "@/components/QuickAuth";
 import { DEMO_ACCOUNTS, homeForRole, useAuth, useAuthHydrated } from "@/lib/auth/store";
+import { authErrorKey } from "@/lib/auth/errors";
 import { useT } from "@/lib/i18n";
 
 export default function LoginInner() {
@@ -29,7 +30,7 @@ export default function LoginInner() {
     try {
       const res = await useAuth.getState().login(mail, pass);
       if (!res.ok) {
-        setError(t("authBadCredentials"));
+        setError(t(authErrorKey(res.error)));
         return;
       }
       afterAuth(res.user.role);

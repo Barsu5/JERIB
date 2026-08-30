@@ -21,6 +21,7 @@ import {
   type CountryId,
 } from "@/lib/dispatch/cities";
 import { homeForRole, useAuth, useAuthHydrated } from "@/lib/auth/store";
+import { authErrorKey } from "@/lib/auth/errors";
 import type { UserRole } from "@/lib/auth/types";
 import { useLang, useT } from "@/lib/i18n";
 
@@ -50,31 +51,35 @@ function RegisterForm() {
     setSubmitting(true);
     setError("");
     try {
+      if (password.trim().length < 6) {
+        setError(t("authPasswordShort"));
+        return;
+      }
       if (role === "partner" && !isAddressValid(addressFields, countryId)) {
-        setError(t("authInvalid"));
+        setError(t("authAddressInvalid"));
         return;
       }
       if (role === "partner") {
         const res = await useAuth.getState().registerPartner({
-          name,
-          email,
-          phone,
+          name: name.trim(),
+          email: email.trim().toLowerCase(),
+          phone: phone.trim(),
           password,
           cityId,
-          companyName,
+          companyName: companyName.trim(),
           address: formatDeliveryAddress(addressFields, { cityId, countryId, lang }),
         });
         if (!res.ok) {
-          setError(res.error === "exists" ? t("authEmailExists") : t("authInvalid"));
+          setError(t(authErrorKey(res.error)));
           return;
         }
         router.replace(homeForRole("partner"));
         return;
       }
       const res = await useAuth.getState().registerClient({
-        name,
-        email,
-        phone,
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        phone: phone.trim(),
         password,
         cityId,
         address: addressFields.line1
@@ -82,7 +87,7 @@ function RegisterForm() {
           : undefined,
       });
       if (!res.ok) {
-        setError(res.error === "exists" ? t("authEmailExists") : t("authInvalid"));
+        setError(t(authErrorKey(res.error)));
         return;
       }
       router.replace(homeForRole("client"));
