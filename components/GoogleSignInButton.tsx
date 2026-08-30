@@ -1,6 +1,7 @@
 "use client";
 
 import { useGoogleLogin } from "@react-oauth/google";
+import { applyApiSession, ensureAuthBootstrap, syncDispatchForUser } from "@/lib/api/bootstrap";
 import { useAuth } from "@/lib/auth/store";
 import type { PublicUser } from "@/lib/auth/types";
 import { useT } from "@/lib/i18n";
@@ -22,6 +23,7 @@ export function GoogleSignInButton({ disabled, busy, onBusy, onSuccess, onError 
     onSuccess: async (tokenResponse) => {
       onBusy(true);
       try {
+        await ensureAuthBootstrap();
         const res = await fetch("/api/auth/google", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -40,11 +42,10 @@ export function GoogleSignInButton({ disabled, busy, onBusy, onSuccess, onError 
           return;
         }
         if (data.user) {
-          useAuth.getState().setSessionUser(data.user);
-          if (useAuth.getState().useApi) {
-            onSuccess(data.user);
-            return;
-          }
+          applyApiSession(data.user);
+          await syncDispatchForUser(data.user);
+          onSuccess(data.user);
+          return;
         }
         const auth = await useAuth.getState().loginWithGoogle({
           sub: data.sub,

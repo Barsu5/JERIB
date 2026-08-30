@@ -11,6 +11,7 @@ import {
   apiUpdateProfile,
   ApiError,
 } from "@/lib/api/client";
+import { applyApiSession, ensureAuthBootstrap, syncDispatchForUser } from "@/lib/api/bootstrap";
 import { cityById, normalizeCityId } from "@/lib/dispatch/cities";
 import { useDispatch } from "@/lib/dispatch/store";
 import type { Partner } from "@/lib/dispatch/types";
@@ -102,7 +103,7 @@ const SEED_USERS: AuthUser[] = [
     passwordHash: DEMO_PASS,
     cityId: "us_new_york",
     address: "ул. Рудаки 45, Душанбе",
-    partnerId: "p-dsb-atlas",
+    partnerId: "p-us-atlas",
     provider: "email",
     providerId: null,
     createdAt: Date.now(),
@@ -116,7 +117,7 @@ const SEED_USERS: AuthUser[] = [
     passwordHash: DEMO_PASS,
     cityId: "us_new_york",
     address: "ул. Рудаки 45, Душанбе",
-    partnerId: "p-dsb-atlas",
+    partnerId: "p-us-atlas",
     provider: "email",
     providerId: null,
     createdAt: Date.now(),
@@ -239,10 +240,12 @@ export const useAuth = create<AuthState>()(
       },
 
       registerClient: async (input) => {
+        await ensureAuthBootstrap();
         if (get().useApi) {
           try {
             const { user } = await apiRegisterClient(input);
-            set({ sessionUser: user });
+            applyApiSession(user);
+            await syncDispatchForUser(user);
             return { ok: true, user };
           } catch (e) {
             if (e instanceof ApiError && e.body.error === "exists") return { ok: false, error: "exists" };
@@ -275,11 +278,12 @@ export const useAuth = create<AuthState>()(
       },
 
       registerPartner: async (input) => {
+        await ensureAuthBootstrap();
         if (get().useApi) {
           try {
             const { user } = await apiRegisterPartner(input);
-            set({ sessionUser: user });
-            if (user.partnerId) useDispatch.setState({ activePartnerId: user.partnerId });
+            applyApiSession(user);
+            await syncDispatchForUser(user);
             return { ok: true, user };
           } catch (e) {
             if (e instanceof ApiError && e.body.error === "exists") return { ok: false, error: "exists" };
@@ -346,13 +350,12 @@ export const useAuth = create<AuthState>()(
       },
 
       login: async (email, password) => {
+        await ensureAuthBootstrap();
         if (get().useApi) {
           try {
             const { user } = await apiLogin(email, password);
-            set({ sessionUser: user });
-            if (user.role === "partner" && user.partnerId) {
-              useDispatch.setState({ activePartnerId: user.partnerId });
-            }
+            applyApiSession(user);
+            await syncDispatchForUser(user);
             return { ok: true, user };
           } catch {
             return { ok: false, error: "credentials" };
@@ -547,18 +550,24 @@ export const useAuth = create<AuthState>()(
   )
 );
 
-/** True after jerib-auth has been rehydrated from localStorage */
+/** True after auth bootstrap (API or localStorage) has finished */
 export function useAuthHydrated() {
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => {
-    const finish = () => setHydrated(true);
-    if (useAuth.persist.hasHydrated()) {
-      finish();
-      return;
+    let cancelled = false;
+    async function run() {
+      await ensureAuthBootstrap();
+      if (!useAuth.getState().useApi) {
+        if (!useAuth.persist.hasHydrated()) {
+          await useAuth.persist.rehydrate();
+        }
+      }
+      if (!cancelled) setHydrated(true);
     }
-    const unsub = useAuth.persist.onFinishHydration(finish);
-    void useAuth.persist.rehydrate();
-    return unsub;
+    void run();
+    return () => {
+      cancelled = true;
+    };
   }, []);
   return hydrated;
 }

@@ -14,10 +14,6 @@ type Props = {
 
 type DemoProvider = "apple" | "telegram";
 
-function wait(ms: number) {
-  return new Promise((r) => setTimeout(r, ms));
-}
-
 export default function QuickAuth({ onSuccess, onError }: Props) {
   const t = useT();
   const ready = useAuthHydrated();
@@ -38,7 +34,6 @@ export default function QuickAuth({ onSuccess, onError }: Props) {
     setLocalError("");
     setBusy(provider);
     try {
-      await wait(350);
       const res = await useAuth.getState().loginWithProvider(provider);
       if (!res.ok) {
         fail(t("authInvalid"));
@@ -58,7 +53,6 @@ export default function QuickAuth({ onSuccess, onError }: Props) {
     setLocalError("");
     setBusy("phone");
     try {
-      await wait(350);
       const res = await useAuth.getState().loginWithPhone(phone);
       if (!res.ok) {
         fail(res.error === "invalid" ? t("authPhoneInvalid") : t("authInvalid"));

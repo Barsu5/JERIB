@@ -42,47 +42,53 @@ function RegisterForm() {
   const [addressFields, setAddressFields] = useState<AddressFields>(EMPTY_ADDRESS);
   const [companyName, setCompanyName] = useState("");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!authReady) return;
+    if (!authReady || submitting) return;
+    setSubmitting(true);
     setError("");
-    if (role === "partner" && !isAddressValid(addressFields, countryId)) {
-      setError(t("authInvalid"));
-      return;
-    }
-    if (role === "partner") {
-      const res = await useAuth.getState().registerPartner({
+    try {
+      if (role === "partner" && !isAddressValid(addressFields, countryId)) {
+        setError(t("authInvalid"));
+        return;
+      }
+      if (role === "partner") {
+        const res = await useAuth.getState().registerPartner({
+          name,
+          email,
+          phone,
+          password,
+          cityId,
+          companyName,
+          address: formatDeliveryAddress(addressFields, { cityId, countryId, lang }),
+        });
+        if (!res.ok) {
+          setError(res.error === "exists" ? t("authEmailExists") : t("authInvalid"));
+          return;
+        }
+        router.replace(homeForRole("partner"));
+        return;
+      }
+      const res = await useAuth.getState().registerClient({
         name,
         email,
         phone,
         password,
         cityId,
-        companyName,
-        address: formatDeliveryAddress(addressFields, { cityId, countryId, lang }),
+        address: addressFields.line1
+          ? formatDeliveryAddress(addressFields, { cityId, countryId, lang })
+          : undefined,
       });
       if (!res.ok) {
         setError(res.error === "exists" ? t("authEmailExists") : t("authInvalid"));
         return;
       }
-      router.replace(homeForRole("partner"));
-      return;
+      router.replace(homeForRole("client"));
+    } finally {
+      setSubmitting(false);
     }
-    const res = await useAuth.getState().registerClient({
-      name,
-      email,
-      phone,
-      password,
-      cityId,
-      address: addressFields.line1
-        ? formatDeliveryAddress(addressFields, { cityId, countryId, lang })
-        : undefined,
-    });
-    if (!res.ok) {
-      setError(res.error === "exists" ? t("authEmailExists") : t("authInvalid"));
-      return;
-    }
-    router.replace(homeForRole("client"));
   };
 
   return (
@@ -209,10 +215,10 @@ function RegisterForm() {
         {error && <p className="text-sm text-clay">{error}</p>}
         <button
           type="submit"
-          disabled={!authReady}
+          disabled={!authReady || submitting}
           className="w-full bg-paper py-4 text-[11px] uppercase tracking-[0.28em] text-ink hover:bg-clay hover:text-paper disabled:opacity-50"
         >
-          {t("registerSubmit")}
+          {submitting ? t("signingIn") : t("registerSubmit")}
         </button>
       </form>
 

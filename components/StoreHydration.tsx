@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { bootstrapApi } from "@/lib/api/bootstrap";
+import { ensureAuthBootstrap } from "@/lib/api/bootstrap";
 import { useAuth } from "@/lib/auth/store";
 import { useDispatch } from "@/lib/dispatch/store";
 import { useLang } from "@/lib/i18n";
@@ -15,10 +15,9 @@ export function StoreHydration() {
   useEffect(() => {
     async function boot() {
       void useLang.persist.rehydrate();
-      await bootstrapApi();
+      await ensureAuthBootstrap();
 
-      const useApi = useAuth.getState().useApi;
-      if (!useApi) {
+      if (!useAuth.getState().useApi) {
         void useAuth.persist.rehydrate();
         void useDispatch.persist.rehydrate();
       }

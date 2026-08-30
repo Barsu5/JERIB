@@ -1,10 +1,11 @@
 "use client";
 
-import { checkHealth, fetchMe, apiFetchDispatch } from "@/lib/api/client";
+import { checkHealth, apiFetchDispatch, fetchMe } from "@/lib/api/client";
+import type { PublicUser } from "@/lib/auth/types";
 import { useAuth } from "@/lib/auth/store";
 import { useDispatch } from "@/lib/dispatch/store";
 
-let bootstrapped = false;
+let bootPromise: Promise<void> | null = null;
 
 async function fetchPublicPartners() {
   const res = await fetch("/api/partners", { credentials: "include" });
@@ -13,10 +14,39 @@ async function fetchPublicPartners() {
   return data.partners;
 }
 
-export async function bootstrapApi() {
-  if (bootstrapped) return;
-  bootstrapped = true;
+export async function syncDispatchForUser(user: PublicUser | null) {
+  if (!user || !useAuth.getState().useApi) return;
+  try {
+    const data = await apiFetchDispatch();
+    if (user.role === "admin") {
+      useDispatch.setState({
+        orders: data.orders,
+        partners: data.partners ?? useDispatch.getState().partners,
+        settings: data.settings ?? useDispatch.getState().settings,
+      });
+    } else if (user.role === "partner" && user.partnerId) {
+      useDispatch.setState({
+        orders: data.orders,
+        activePartnerId: user.partnerId,
+      });
+    } else {
+      useDispatch.setState({ orders: data.orders });
+    }
+  } catch {
+    // Non-fatal — user is still logged in
+  }
+}
 
+export function applyApiSession(user: PublicUser) {
+  useAuth.getState().setUseApi(true);
+  useAuth.getState().setSessionUser(user);
+  useDispatch.getState().setUseApi(true);
+  if (user.role === "partner" && user.partnerId) {
+    useDispatch.setState({ activePartnerId: user.partnerId });
+  }
+}
+
+async function runBootstrap() {
   try {
     const health = await checkHealth();
     if (!health.database) return;
@@ -28,26 +58,22 @@ export async function bootstrapApi() {
     if (partners) useDispatch.setState({ partners });
 
     const me = await fetchMe().catch(() => ({ user: null }));
-    useAuth.getState().setSessionUser(me.user);
-
     if (me.user) {
-      const data = await apiFetchDispatch();
-      if (me.user.role === "admin") {
-        useDispatch.setState({
-          orders: data.orders,
-          partners: data.partners ?? partners ?? [],
-          settings: data.settings ?? useDispatch.getState().settings,
-        });
-      } else if (me.user.role === "partner" && me.user.partnerId) {
-        useDispatch.setState({
-          orders: data.orders,
-          activePartnerId: me.user.partnerId,
-        });
-      } else {
-        useDispatch.setState({ orders: data.orders });
-      }
+      applyApiSession(me.user);
+      await syncDispatchForUser(me.user);
     }
   } catch {
     // Stay on localStorage mode
   }
+}
+
+/** Wait until API vs localStorage mode is resolved (call before login/register). */
+export function ensureAuthBootstrap(): Promise<void> {
+  if (!bootPromise) bootPromise = runBootstrap();
+  return bootPromise;
+}
+
+/** @deprecated use ensureAuthBootstrap */
+export async function bootstrapApi() {
+  await ensureAuthBootstrap();
 }

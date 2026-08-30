@@ -15,6 +15,7 @@ export default function LoginInner() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const afterAuth = (role: "client" | "partner" | "admin") => {
     const next = search.get("next");
@@ -22,13 +23,19 @@ export default function LoginInner() {
   };
 
   const go = async (mail: string, pass: string) => {
-    if (!authReady) return;
-    const res = await useAuth.getState().login(mail, pass);
-    if (!res.ok) {
-      setError(t("authBadCredentials"));
-      return;
+    if (!authReady || submitting) return;
+    setSubmitting(true);
+    setError("");
+    try {
+      const res = await useAuth.getState().login(mail, pass);
+      if (!res.ok) {
+        setError(t("authBadCredentials"));
+        return;
+      }
+      afterAuth(res.user.role);
+    } finally {
+      setSubmitting(false);
     }
-    afterAuth(res.user.role);
   };
 
   const onSubmit = async (e: FormEvent) => {
@@ -73,10 +80,10 @@ export default function LoginInner() {
         {error && <p className="text-sm text-clay">{error}</p>}
         <button
           type="submit"
-          disabled={!authReady}
+          disabled={!authReady || submitting}
           className="w-full bg-paper py-4 text-[11px] uppercase tracking-[0.28em] text-ink hover:bg-clay hover:text-paper disabled:opacity-50"
         >
-          {t("loginSubmit")}
+          {submitting ? t("signingIn") : t("loginSubmit")}
         </button>
       </form>
 
@@ -94,7 +101,7 @@ export default function LoginInner() {
             <li key={acc.email}>
               <button
                 type="button"
-                disabled={!authReady}
+                disabled={!authReady || submitting}
                 onClick={() => {
                   setEmail(acc.email);
                   setPassword(acc.password);
