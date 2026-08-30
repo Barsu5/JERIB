@@ -19,8 +19,14 @@ const LEGACY_CITY_MAP: Record<string, CityId> = {
   khujand: "tj_khujand",
   kulob: "tj_kulob",
   bokhtar: "tj_bokhtar",
+  qurghonteppa: "tj_bokhtar",
+  kurgan_tyube: "tj_bokhtar",
   istaravshan: "tj_istaravshan",
   vahdat: "tj_vahdat",
+  gharm: "tj_rasht",
+  chkalovsk: "tj_buston",
+  kuybyshev: "tj_levakant",
+  gafurov: "tj_gafurov",
 };
 
 export function normalizeCityId(id: string): CityId {
