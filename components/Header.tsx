@@ -21,6 +21,7 @@ export function Header() {
 
   const showUser = hydrated && authReady ? user : null;
   const showCount = hydrated ? count : 0;
+  const isMarketing = pathname === "/";
 
   const accountHref =
     showUser?.role === "partner"
@@ -29,9 +30,18 @@ export function Header() {
         ? "/admin"
         : "/account";
 
+  const headerClass = isMarketing
+    ? "border-b border-slate-200 bg-white/95 text-slate-900"
+    : "border-b border-white/5 bg-ink/80 text-paper backdrop-blur-sm";
+
+  const activeClass = isMarketing ? "text-clay" : "text-gold";
+  const hoverClass = isMarketing ? "hover:text-clay" : "hover:text-gold";
+  const langActive = isMarketing ? "text-clay" : "text-gold";
+  const langIdle = isMarketing ? "text-slate-500 hover:text-slate-900" : "text-mist hover:text-paper";
+
   return (
-    <header className="fixed inset-x-0 top-0 z-40 border-b border-white/5 bg-ink/80 backdrop-blur-sm">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4 text-paper">
+    <header className={`fixed inset-x-0 top-0 z-40 ${headerClass}`}>
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4">
         <BrandMark />
         <nav className="flex flex-wrap items-center justify-end gap-4 text-[11px] uppercase tracking-[0.22em] sm:gap-6">
           <div className="flex items-center gap-1.5 normal-case tracking-[0.12em]">
@@ -40,17 +50,17 @@ export function Header() {
                 key={l.id}
                 type="button"
                 onClick={() => setLang(l.id)}
-                className={`px-1.5 py-0.5 ${lang === l.id ? "text-gold" : "text-mist hover:text-paper"}`}
+                className={`px-1.5 py-0.5 ${lang === l.id ? langActive : langIdle}`}
               >
                 {l.label}
               </button>
             ))}
           </div>
-          <Link href="/studio" className={studio ? "text-gold" : "hover:text-gold"}>
+          <Link href="/studio" className={studio ? activeClass : hoverClass}>
             {t("create")}
           </Link>
           {(!showUser || showUser.role === "client") && (
-            <Link href="/cart" className="relative hover:text-gold">
+            <Link href="/cart" className={`relative ${hoverClass}`}>
               {t("cart")}
               {showCount > 0 && (
                 <span className="absolute -right-4 -top-2 text-[10px] text-clay">{showCount}</span>
@@ -60,7 +70,7 @@ export function Header() {
           {showUser ? (
             <Link
               href={accountHref}
-              className={pathname.startsWith(accountHref) ? "text-gold" : "hover:text-gold"}
+              className={pathname.startsWith(accountHref) ? activeClass : hoverClass}
             >
               {showUser.role === "partner"
                 ? t("partnerNav")
@@ -70,10 +80,10 @@ export function Header() {
             </Link>
           ) : (
             <>
-              <Link href="/login" className="hover:text-gold">
+              <Link href="/login" className={hoverClass}>
                 {t("loginLink")}
               </Link>
-              <Link href="/register" className="hover:text-gold">
+              <Link href="/register" className={hoverClass}>
                 {t("registerLink")}
               </Link>
             </>

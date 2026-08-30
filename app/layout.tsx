@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Cinzel, Manrope } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/Header";
+import { MarketingPageTheme } from "@/components/MarketingPageTheme";
 import { GoogleAuthProvider } from "@/components/GoogleAuthProvider";
 import { LangAttr } from "@/components/LangAttr";
 import { StoreHydration } from "@/components/StoreHydration";
@@ -29,6 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <GoogleAuthProvider>
           <StoreHydration />
           <LangAttr />
+          <MarketingPageTheme />
           <Header />
           {children}
         </GoogleAuthProvider>

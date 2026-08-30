@@ -11,6 +11,8 @@ const config: Config = {
         gold: "#c4a574",
         navy: "#1a2332",
         mist: "#9a8f7e",
+        surface: "#ffffff",
+        muted: "#f6f6f4",
       },
       fontFamily: {
         display: ["var(--font-display)", "Georgia", "serif"],
