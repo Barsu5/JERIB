@@ -10,11 +10,18 @@ const schema = z.object({
 
 async function fetchPollinations(prompt: string) {
   const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=512&height=512&nologo=true&seed=${Date.now()}`;
-  const res = await fetch(url, { cache: "no-store" });
+  const res = await fetch(url, {
+    cache: "no-store",
+    headers: { "User-Agent": "JERIB/1.0" },
+    signal: AbortSignal.timeout(40_000),
+  });
   if (!res.ok) throw new Error("pollinations_failed");
+  const type = res.headers.get("content-type") ?? "";
+  if (!type.startsWith("image/")) throw new Error("pollinations_not_image");
   const bytes = await res.arrayBuffer();
+  if (bytes.byteLength < 512) throw new Error("pollinations_empty");
   const base64 = Buffer.from(bytes).toString("base64");
-  const mime = res.headers.get("content-type")?.includes("jpeg") ? "image/jpeg" : "image/png";
+  const mime = type.includes("jpeg") ? "image/jpeg" : "image/png";
   return `data:${mime};base64,${base64}`;
 }
 
@@ -54,8 +61,13 @@ export async function POST(req: Request) {
     const openAi = await fetchOpenAi(fullPrompt);
     if (openAi) return NextResponse.json({ image: openAi });
 
-    const image = await fetchPollinations(fullPrompt);
-    return NextResponse.json({ image });
+    try {
+      const image = await fetchPollinations(fullPrompt);
+      return NextResponse.json({ image });
+    } catch {
+      // Let the browser call Pollinations directly (Render often blocks server egress).
+      return NextResponse.json({ useClient: true }, { status: 503 });
+    }
   } catch (e) {
     console.error("ai design error:", e);
     return NextResponse.json({ error: "ai_failed" }, { status: 502 });
