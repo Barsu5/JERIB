@@ -385,7 +385,7 @@ export function Studio() {
         </ul>
       </aside>
 
-      <section className="relative order-1 flex flex-col items-center justify-center px-6 py-8 lg:order-2 lg:py-10">
+      <section className="relative order-1 flex flex-col items-center px-6 py-8 lg:order-2 lg:py-10">
         <div className="mb-6 flex flex-wrap items-center justify-center gap-4 text-[11px] uppercase tracking-[0.22em] sm:gap-6">
           <button
             type="button"
@@ -530,6 +530,16 @@ export function Studio() {
         <p className="mt-8 max-w-md text-center text-sm text-mist">
           {t(`blurb_${productId}` as DictKey)}
         </p>
+
+        <div className="mt-8 w-full max-w-[520px] border-t border-white/10 pt-8">
+          <p className="mb-4 text-[10px] uppercase tracking-[0.28em] text-clay">{t("aiEditor")}</p>
+          <AiDesignPanel
+            productId={productId}
+            onGenerated={placeAiImage}
+            onAddName={placeFootballName}
+            onAddNumber={placeFootballNumber}
+          />
+        </div>
       </section>
 
       <aside className="order-3 space-y-8 border-t border-white/10 px-6 py-8 lg:border-l lg:border-t-0 lg:py-10">
@@ -693,7 +703,6 @@ export function Studio() {
             {(
               [
                 ["text", "addText"],
-                ["ai", "aiEditor"],
                 ["logo", "logo"],
                 ["image", "image"],
                 ["pattern", "pattern"],
@@ -776,15 +785,6 @@ export function Studio() {
         )}
 
         {tool === "drawing" && <DrawPad onDone={(data) => addLayer("drawing", data)} />}
-
-        {tool === "ai" && (
-          <AiDesignPanel
-            productId={productId}
-            onGenerated={placeAiImage}
-            onAddName={placeFootballName}
-            onAddNumber={placeFootballNumber}
-          />
-        )}
 
         {layers.length > 0 && (
           <div>

@@ -3,17 +3,14 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { en } from "./messages/en";
-import { es } from "./messages/es";
-import { fr } from "./messages/fr";
-import { de } from "./messages/de";
-import { pt } from "./messages/pt";
 import { ru } from "./messages/ru";
+import { tg } from "./messages/tg";
 
-export type Lang = "en" | "es" | "fr" | "de" | "pt" | "ru";
+export type Lang = "en" | "ru" | "tg";
 
 export type DictKey = keyof typeof en;
 
-const dict = { en, es, fr, de, pt, ru };
+const dict = { en, ru, tg };
 
 type LangState = {
   lang: Lang;
@@ -21,12 +18,19 @@ type LangState = {
   t: (key: DictKey) => string;
 };
 
-const VALID_LANGS = new Set<Lang>(["en", "es", "fr", "de", "pt", "ru"]);
+const VALID_LANGS = new Set<Lang>(["en", "ru", "tg"]);
+
+const LEGACY_LANG_MAP: Record<string, Lang> = {
+  es: "en",
+  fr: "en",
+  de: "en",
+  pt: "en",
+};
 
 export const useLang = create<LangState>()(
   persist(
     (set, get) => ({
-      lang: "en",
+      lang: "ru",
       setLang: (lang) => set({ lang }),
       t: (key) => dict[get().lang][key] ?? dict.en[key] ?? key,
     }),
@@ -34,19 +38,19 @@ export const useLang = create<LangState>()(
       name: "jerib-lang",
       skipHydration: true,
       onRehydrateStorage: () => (state) => {
-        if (state && !VALID_LANGS.has(state.lang)) state.lang = "en";
+        if (!state) return;
+        const mapped = LEGACY_LANG_MAP[state.lang as string];
+        if (mapped) state.lang = mapped;
+        else if (!VALID_LANGS.has(state.lang)) state.lang = "ru";
       },
     }
   )
 );
 
 export const LANGS: { id: Lang; label: string }[] = [
+  { id: "ru", label: "РУ" },
   { id: "en", label: "EN" },
-  { id: "ru", label: "RU" },
-  { id: "es", label: "ES" },
-  { id: "fr", label: "FR" },
-  { id: "de", label: "DE" },
-  { id: "pt", label: "PT" },
+  { id: "tg", label: "ТҶ" },
 ];
 
 export function useT() {

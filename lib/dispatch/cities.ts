@@ -42,6 +42,7 @@ export function countryById(id: CountryId | string) {
 export function countryLabel(id: CountryId | string, lang: Lang) {
   const c = countryById(id);
   if (lang === "ru") return c.nameRu;
+  if (lang === "tg") return c.nameTg;
   return c.nameEn;
 }
 
@@ -61,6 +62,7 @@ export function cityCountryId(id: CityId | string): CountryId {
 export function cityLabel(id: CityId | string, lang: Lang) {
   const c = cityById(id);
   if (lang === "ru") return c.nameRu;
+  if (lang === "tg") return c.nameTg;
   return c.nameEn;
 }
 

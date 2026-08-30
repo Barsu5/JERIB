@@ -93,7 +93,13 @@ function buildGeo() {
   const countries: Country[] = [];
   const cities: City[] = [];
   for (const [countryId, nameEn, nameRu, region, cityList] of RAW) {
-    countries.push({ id: countryId, nameEn, nameRu, nameTg: nameEn, region });
+    countries.push({
+      id: countryId,
+      nameEn,
+      nameRu,
+      nameTg: countryId === "tj" ? "Тоҷикистон" : nameEn,
+      region,
+    });
     for (const [slug, cityEn, cityRu, cityTg, lat, lng] of cityList) {
       cities.push({
         id: `${countryId}_${slug}`,
