@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import QuickAuth from "@/components/QuickAuth";
@@ -8,15 +8,33 @@ import { DEMO_ACCOUNTS, homeForRole, useAuth, useAuthHydrated } from "@/lib/auth
 import { authErrorKey } from "@/lib/auth/errors";
 import { useT } from "@/lib/i18n";
 
+type LoginAudience = "client" | "partner";
+
 export default function LoginInner() {
   const t = useT();
   const router = useRouter();
   const search = useSearchParams();
   const authReady = useAuthHydrated();
+  const [audience, setAudience] = useState<LoginAudience>(
+    search.get("role") === "partner" ? "partner" : "client"
+  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    setAudience(search.get("role") === "partner" ? "partner" : "client");
+  }, [search]);
+
+  const setLoginAudience = (next: LoginAudience) => {
+    setAudience(next);
+    const params = new URLSearchParams(search.toString());
+    if (next === "partner") params.set("role", "partner");
+    else params.delete("role");
+    const qs = params.toString();
+    router.replace(qs ? `/login?${qs}` : "/login", { scroll: false });
+  };
 
   const afterAuth = (role: "client" | "partner" | "admin") => {
     const next = search.get("next");
@@ -33,6 +51,10 @@ export default function LoginInner() {
         setError(t(authErrorKey(res.error)));
         return;
       }
+      if (audience === "partner" && res.user.role !== "partner" && res.user.role !== "admin") {
+        setError(t("authPartnerOnly"));
+        return;
+      }
       afterAuth(res.user.role);
     } finally {
       setSubmitting(false);
@@ -44,18 +66,47 @@ export default function LoginInner() {
     await go(email, password);
   };
 
+  const demoAccounts = DEMO_ACCOUNTS.filter((acc) =>
+    audience === "partner" ? acc.role === "partner" : acc.role !== "partner"
+  );
+
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 pb-24 pt-28">
       <p className="text-[10px] uppercase tracking-[0.32em] text-clay">{t("authPortal")}</p>
       <h1 className="mt-3 font-display text-5xl">{t("loginTitle")}</h1>
-      <p className="mt-3 text-sm text-mist">{t("loginBody")}</p>
+      <p className="mt-3 text-sm text-mist">
+        {audience === "partner" ? t("loginBodyPartner") : t("loginBody")}
+      </p>
 
-      <div className="mt-10">
-        <QuickAuth
-          onSuccess={(user) => afterAuth(user.role)}
-          onError={(msg) => setError(msg)}
-        />
+      <div className="mt-8 flex gap-2">
+        <button
+          type="button"
+          onClick={() => setLoginAudience("client")}
+          className={`flex-1 px-3 py-3 text-[10px] uppercase tracking-[0.18em] ${
+            audience === "client" ? "bg-paper text-ink" : "border border-white/15"
+          }`}
+        >
+          {t("roleClient")}
+        </button>
+        <button
+          type="button"
+          onClick={() => setLoginAudience("partner")}
+          className={`flex-1 px-3 py-3 text-[10px] uppercase tracking-[0.18em] ${
+            audience === "partner" ? "bg-paper text-ink" : "border border-white/15"
+          }`}
+        >
+          {t("rolePartner")}
+        </button>
       </div>
+
+      {audience === "client" && (
+        <div className="mt-8">
+          <QuickAuth
+            onSuccess={(user) => afterAuth(user.role)}
+            onError={(msg) => setError(msg)}
+          />
+        </div>
+      )}
 
       <form onSubmit={onSubmit} className="mt-8 space-y-5">
         <label className="block text-[10px] uppercase tracking-[0.22em] text-mist">
@@ -88,19 +139,23 @@ export default function LoginInner() {
         </button>
       </form>
 
-      <p className="mt-6 text-xs text-mist">{t("partnerLoginNote")}</p>
+      {audience === "partner" && (
+        <p className="mt-6 text-xs text-mist">{t("partnerLoginNote")}</p>
+      )}
 
-      <p className="mt-8 text-sm text-mist">
-        {t("noAccount")}{" "}
-        <Link href="/register" className="text-clay hover:underline">
-          {t("registerLink")}
-        </Link>
-      </p>
+      {audience === "client" && (
+        <p className="mt-8 text-sm text-mist">
+          {t("noAccount")}{" "}
+          <Link href="/register" className="text-clay hover:underline">
+            {t("registerLink")}
+          </Link>
+        </p>
+      )}
 
       <div className="mt-10 border border-white/10 p-4 text-xs leading-relaxed text-mist">
         <p className="text-[10px] uppercase tracking-[0.2em] text-clay">{t("demoAccounts")}</p>
         <ul className="mt-4 space-y-2">
-          {DEMO_ACCOUNTS.map((acc) => (
+          {demoAccounts.map((acc) => (
             <li key={acc.email}>
               <button
                 type="button"

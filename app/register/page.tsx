@@ -41,7 +41,7 @@ function RegisterForm() {
 
   useEffect(() => {
     if (search.get("role") === "partner") {
-      router.replace("/login");
+      router.replace("/login?role=partner");
     }
   }, [search, router]);
 
@@ -156,7 +156,12 @@ function RegisterForm() {
         </button>
       </form>
 
-      <p className="mt-6 text-xs text-mist">{t("partnerLoginNote")}</p>
+      <p className="mt-6 text-xs text-mist">
+        {t("partnerLoginNote")}{" "}
+        <Link href="/login?role=partner" className="text-clay hover:underline">
+          {t("rolePartner")}
+        </Link>
+      </p>
 
       <p className="mt-8 text-sm text-mist">
         {t("haveAccount")}{" "}
