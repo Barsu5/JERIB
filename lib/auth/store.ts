@@ -7,7 +7,7 @@ import {
   apiLogin,
   apiLogout,
   apiRegisterClient,
-  apiRegisterPartner,
+  apiCreatePartnerAccount,
   apiUpdateProfile,
 } from "@/lib/api/client";
 import { applyApiSession, ensureAuthBootstrap, syncDispatchForUser } from "@/lib/api/bootstrap";
@@ -21,7 +21,7 @@ import type {
   OAuthProvider,
   PublicUser,
   RegisterClientInput,
-  RegisterPartnerInput,
+  CreatePartnerAccountInput,
   UserRole,
 } from "./types";
 
@@ -208,7 +208,9 @@ type AuthState = {
   setUseApi: (value: boolean) => void;
   setSessionUser: (user: PublicUser | null) => void;
   registerClient: (input: RegisterClientInput) => Promise<AuthResult>;
-  registerPartner: (input: RegisterPartnerInput) => Promise<AuthResult>;
+  adminCreatePartnerAccount: (
+    input: CreatePartnerAccountInput
+  ) => Promise<{ ok: true; partnerId: string; email: string } | { ok: false; error: AuthErrorCode }>;
   login: (email: string, password: string) => Promise<AuthResult>;
   loginWithGoogle: (profile: GoogleProfileInput) => Promise<AuthResult>;
   loginWithProvider: (provider: Exclude<OAuthProvider, "google">) => Promise<AuthResult>;
@@ -276,18 +278,22 @@ export const useAuth = create<AuthState>()(
         return { ok: true, user: toPublic(user) };
       },
 
-      registerPartner: async (input) => {
+      adminCreatePartnerAccount: async (input) => {
         await ensureAuthBootstrap();
         if (get().useApi) {
           try {
-            const { user } = await apiRegisterPartner(input);
-            applyApiSession(user);
-            await syncDispatchForUser(user);
-            return { ok: true, user };
+            const { partner, user } = await apiCreatePartnerAccount(input);
+            useDispatch.setState((s) => ({
+              partners: s.partners.some((p) => p.id === partner.id)
+                ? s.partners.map((p) => (p.id === partner.id ? partner : p))
+                : [...s.partners, partner],
+            }));
+            return { ok: true, partnerId: partner.id, email: user.email };
           } catch (e) {
             return { ok: false, error: mapAuthApiError(e) };
           }
         }
+
         const email = input.email.trim().toLowerCase();
         if (!email || input.password.length < 6) {
           return { ok: false, error: input.password.length < 6 ? "password" : "invalid" };
@@ -326,7 +332,6 @@ export const useAuth = create<AuthState>()(
           createdAt: Date.now(),
         };
 
-        // Add partner into dispatch store
         useDispatch.setState((s) => ({ partners: [...s.partners, partner] }));
 
         const user: AuthUser = {
@@ -343,8 +348,8 @@ export const useAuth = create<AuthState>()(
           providerId: null,
           createdAt: Date.now(),
         };
-        set({ users: [...get().users, user], sessionUserId: user.id });
-        return { ok: true, user: toPublic(user) };
+        set({ users: [...get().users, user] });
+        return { ok: true, partnerId, email };
       },
 
       login: async (email, password) => {

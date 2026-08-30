@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, Suspense, useState } from "react";
+import { FormEvent, Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import QuickAuth from "@/components/QuickAuth";
@@ -9,7 +9,6 @@ import { AddressForm } from "@/components/AddressForm";
 import {
   EMPTY_ADDRESS,
   formatDeliveryAddress,
-  validateAddress,
   type AddressFields,
 } from "@/lib/address";
 import {
@@ -20,8 +19,7 @@ import {
   type CountryId,
 } from "@/lib/dispatch/cities";
 import { homeForRole, useAuth, useAuthHydrated } from "@/lib/auth/store";
-import { addressIssueKey, authErrorKey } from "@/lib/auth/errors";
-import type { UserRole } from "@/lib/auth/types";
+import { authErrorKey } from "@/lib/auth/errors";
 import { useLang, useT } from "@/lib/i18n";
 
 function RegisterForm() {
@@ -31,8 +29,6 @@ function RegisterForm() {
   const search = useSearchParams();
   const authReady = useAuthHydrated();
 
-  const initialRole = (search.get("role") as UserRole) || "client";
-  const [role, setRole] = useState<UserRole>(initialRole === "partner" ? "partner" : "client");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -40,9 +36,14 @@ function RegisterForm() {
   const [cityId, setCityId] = useState<CityId>(DEFAULT_CITY_ID);
   const [countryId, setCountryId] = useState<CountryId>(DEFAULT_COUNTRY_ID);
   const [addressFields, setAddressFields] = useState<AddressFields>(EMPTY_ADDRESS);
-  const [companyName, setCompanyName] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (search.get("role") === "partner") {
+      router.replace("/login");
+    }
+  }, [search, router]);
 
   const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -56,28 +57,6 @@ function RegisterForm() {
     try {
       if (password.trim().length < 6) {
         setError(t("authPasswordShort"));
-        return;
-      }
-      if (role === "partner") {
-        const addressCheck = validateAddress(addressFields, countryId);
-        if (!addressCheck.valid) {
-          setError(t(addressIssueKey(addressCheck.issue)));
-          return;
-        }
-        const res = await useAuth.getState().registerPartner({
-          name: name.trim(),
-          email: email.trim().toLowerCase(),
-          phone: phone.trim(),
-          password,
-          cityId,
-          companyName: companyName.trim(),
-          address: formatDeliveryAddress(addressFields, { cityId, countryId, lang }),
-        });
-        if (!res.ok) {
-          setError(t(authErrorKey(res.error)));
-          return;
-        }
-        router.replace(homeForRole("partner"));
         return;
       }
       const res = await useAuth.getState().registerClient({
@@ -106,35 +85,12 @@ function RegisterForm() {
       <h1 className="mt-3 font-display text-5xl">{t("registerTitle")}</h1>
       <p className="mt-3 text-sm text-mist">{t("registerBody")}</p>
 
-      <div className="mt-8 flex gap-2">
-        <button
-          type="button"
-          onClick={() => setRole("client")}
-          className={`flex-1 px-3 py-3 text-[10px] uppercase tracking-[0.18em] ${
-            role === "client" ? "bg-paper text-ink" : "border border-white/15"
-          }`}
-        >
-          {t("roleClient")}
-        </button>
-        <button
-          type="button"
-          onClick={() => setRole("partner")}
-          className={`flex-1 px-3 py-3 text-[10px] uppercase tracking-[0.18em] ${
-            role === "partner" ? "bg-paper text-ink" : "border border-white/15"
-          }`}
-        >
-          {t("rolePartner")}
-        </button>
+      <div className="mt-8">
+        <QuickAuth
+          onSuccess={(user) => router.replace(homeForRole(user.role))}
+          onError={(msg) => setError(msg)}
+        />
       </div>
-
-      {role === "client" && (
-        <div className="mt-8">
-          <QuickAuth
-            onSuccess={(user) => router.replace(homeForRole(user.role))}
-            onError={(msg) => setError(msg)}
-          />
-        </div>
-      )}
 
       <form onSubmit={onSubmit} className="mt-8 space-y-5">
         <label className="block text-[10px] uppercase tracking-[0.22em] text-mist">
@@ -176,51 +132,20 @@ function RegisterForm() {
             className="mt-2 w-full border border-white/15 bg-transparent px-3 py-3 text-sm outline-none focus:border-clay"
           />
         </label>
-        {role === "partner" ? (
-          <>
-            <label className="block text-[10px] uppercase tracking-[0.22em] text-mist">
-              {t("companyName")}
-              <input
-                required
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
-                className="mt-2 w-full border border-white/15 bg-transparent px-3 py-3 text-sm outline-none focus:border-clay"
-              />
-            </label>
-            <CountryCitySelect
-              countryId={countryId}
-              cityId={cityId}
-              onCountryChange={setCountryId}
-              onCityChange={(id) => setCityId(normalizeCityId(id))}
-            />
-            <AddressForm
-              countryId={countryId}
-              cityId={cityId}
-              value={addressFields}
-              onChange={setAddressFields}
-              required
-              variant="company"
-            />
-            <p className="text-xs text-mist">{t("partnerRegisterNote")}</p>
-          </>
-        ) : (
-          <>
-            <CountryCitySelect
-              countryId={countryId}
-              cityId={cityId}
-              onCountryChange={setCountryId}
-              onCityChange={(id) => setCityId(normalizeCityId(id))}
-            />
-            <AddressForm
-              countryId={countryId}
-              cityId={cityId}
-              value={addressFields}
-              onChange={setAddressFields}
-              required={false}
-              variant="delivery"
-            />
-          </>
-        )}
+        <CountryCitySelect
+          countryId={countryId}
+          cityId={cityId}
+          onCountryChange={setCountryId}
+          onCityChange={(id) => setCityId(normalizeCityId(id))}
+        />
+        <AddressForm
+          countryId={countryId}
+          cityId={cityId}
+          value={addressFields}
+          onChange={setAddressFields}
+          required={false}
+          variant="delivery"
+        />
         {error && <p className="text-sm text-clay">{error}</p>}
         <button
           type="submit"
@@ -230,6 +155,8 @@ function RegisterForm() {
           {submitting ? t("signingIn") : t("registerSubmit")}
         </button>
       </form>
+
+      <p className="mt-6 text-xs text-mist">{t("partnerLoginNote")}</p>
 
       <p className="mt-8 text-sm text-mist">
         {t("haveAccount")}{" "}

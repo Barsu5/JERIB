@@ -4,8 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth, useSessionUser, useAuthHydrated } from "@/lib/auth/store";
+import { authErrorKey } from "@/lib/auth/errors";
+import { CountryCitySelect } from "@/components/CountryCitySelect";
 import { formatPrice } from "@/lib/catalog";
-import { CITIES, cityLabel, locationLabel } from "@/lib/dispatch/cities";
+import { DEFAULT_CITY_ID, DEFAULT_COUNTRY_ID, normalizeCityId, CITIES, cityLabel, locationLabel } from "@/lib/dispatch/cities";
 import { QUALITY_STANDARDS } from "@/lib/dispatch/standards";
 import { partnerById, statusLabel, useDispatch } from "@/lib/dispatch/store";
 import type { Partner, PartnerApproval } from "@/lib/dispatch/types";
@@ -30,7 +32,7 @@ export default function AdminPage() {
   const setApproval = useDispatch((s) => s.adminSetPartnerApproval);
   const toggleAccepting = useDispatch((s) => s.adminToggleAccepting);
   const updatePartner = useDispatch((s) => s.adminUpdatePartner);
-  const addPartner = useDispatch((s) => s.adminAddPartner);
+  const createPartnerAccount = useAuth((s) => s.adminCreatePartnerAccount);
   const setSettings = useDispatch((s) => s.adminSetSettings);
   const setLoad = useDispatch((s) => s.adminSetLoad);
   const markPaid = useDispatch((s) => s.adminMarkPayoutPaid);
@@ -222,7 +224,7 @@ export default function AdminPage() {
           setApproval={setApproval}
           toggleAccepting={toggleAccepting}
           updatePartner={updatePartner}
-          addPartner={addPartner}
+          createPartnerAccount={createPartnerAccount}
           setLoad={setLoad}
         />
       )}
@@ -337,56 +339,175 @@ function PartnersAdmin({
   setApproval,
   toggleAccepting,
   updatePartner,
-  addPartner,
+  createPartnerAccount,
   setLoad,
 }: {
   partners: Partner[];
   setApproval: (id: string, a: PartnerApproval) => void;
   toggleAccepting: (id: string) => void;
   updatePartner: (id: string, patch: Partial<Partner>) => void;
-  addPartner: (p: Omit<Partner, "id" | "createdAt">) => string;
+  createPartnerAccount: ReturnType<typeof useAuth.getState>["adminCreatePartnerAccount"];
   setLoad: (id: string, load: number) => void;
 }) {
   const t = useT();
   const lang = useLang((s) => s.lang);
+  const [showForm, setShowForm] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [address, setAddress] = useState("");
+  const [cityId, setCityId] = useState(DEFAULT_CITY_ID);
+  const [countryId, setCountryId] = useState(DEFAULT_COUNTRY_ID);
+  const [formError, setFormError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const createDemo = () => {
-    addPartner({
-      name: "New Partner Pending",
-      cityId: "us_new_york",
-      address: "New address",
-      lat: 40.7128,
-      lng: -74.006,
-      serviceRadiusKm: 20,
-      serviceCities: ["us_new_york"],
-      acceptsRemoteDelivery: false,
-      printMethods: ["dtg"],
-      products: ["tshirt"],
-      productionPrices: { tshirt: 90 },
-      minOrderQty: 1,
-      capacityUnits: 30,
-      avgProductionHours: 24,
-      workingHours: { open: 9, close: 18, days: [1, 2, 3, 4, 5] },
-      currentLoad: 0.1,
-      rating: 4,
-      qualityScore: 80,
-      completionRate: 0.9,
-      cancelRate: 0.05,
-      acceptingOrders: false,
-      approval: "pending",
-      commissionOverride: null,
-    });
+  const resetForm = () => {
+    setName("");
+    setEmail("");
+    setPhone("");
+    setPassword("");
+    setCompanyName("");
+    setAddress("");
+    setCityId(DEFAULT_CITY_ID);
+    setCountryId(DEFAULT_COUNTRY_ID);
+    setFormError("");
+  };
+
+  const onCreateAccount = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (submitting) return;
+    setSubmitting(true);
+    setFormError("");
+    setSuccess("");
+    try {
+      if (password.trim().length < 6) {
+        setFormError(t("authPasswordShort"));
+        return;
+      }
+      const res = await createPartnerAccount({
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        phone: phone.trim(),
+        password,
+        cityId,
+        companyName: companyName.trim(),
+        address: address.trim(),
+      });
+      if (!res.ok) {
+        setFormError(t(authErrorKey(res.error)));
+        return;
+      }
+      setSuccess(
+        t("adminPartnerCreated").replace("{email}", res.email).replace("{password}", password)
+      );
+      resetForm();
+      setShowForm(false);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
     <section className="mt-10 space-y-4">
-      <button
-        type="button"
-        onClick={createDemo}
-        className="bg-paper px-5 py-3 text-[11px] uppercase tracking-[0.22em] text-ink hover:bg-clay hover:text-paper"
-      >
-        {t("addPartner")}
-      </button>
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => {
+            setShowForm((v) => !v);
+            setSuccess("");
+          }}
+          className="bg-paper px-5 py-3 text-[11px] uppercase tracking-[0.22em] text-ink hover:bg-clay hover:text-paper"
+        >
+          {showForm ? t("cancel") : t("adminCreatePartner")}
+        </button>
+      </div>
+
+      {success && (
+        <p className="border border-clay/40 bg-clay/10 px-4 py-3 text-sm text-paper">{success}</p>
+      )}
+
+      {showForm && (
+        <form onSubmit={onCreateAccount} className="border border-white/10 p-5 space-y-4">
+          <p className="text-sm text-mist">{t("adminCreatePartnerBody")}</p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="block text-[10px] uppercase tracking-[0.2em] text-mist">
+              {t("name")}
+              <input
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="mt-2 w-full border border-white/15 bg-transparent px-3 py-2 text-sm"
+              />
+            </label>
+            <label className="block text-[10px] uppercase tracking-[0.2em] text-mist">
+              {t("companyName")}
+              <input
+                required
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                className="mt-2 w-full border border-white/15 bg-transparent px-3 py-2 text-sm"
+              />
+            </label>
+            <label className="block text-[10px] uppercase tracking-[0.2em] text-mist">
+              Email
+              <input
+                required
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="mt-2 w-full border border-white/15 bg-transparent px-3 py-2 text-sm"
+              />
+            </label>
+            <label className="block text-[10px] uppercase tracking-[0.2em] text-mist">
+              {t("phone")}
+              <input
+                required
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="mt-2 w-full border border-white/15 bg-transparent px-3 py-2 text-sm"
+              />
+            </label>
+            <label className="block text-[10px] uppercase tracking-[0.2em] text-mist sm:col-span-2">
+              {t("password")}
+              <input
+                required
+                type="text"
+                minLength={6}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="mt-2 w-full border border-white/15 bg-transparent px-3 py-2 text-sm"
+              />
+            </label>
+          </div>
+          <CountryCitySelect
+            countryId={countryId}
+            cityId={cityId}
+            onCountryChange={setCountryId}
+            onCityChange={(id) => setCityId(normalizeCityId(id))}
+          />
+          <label className="block text-[10px] uppercase tracking-[0.2em] text-mist">
+            {t("address")}
+            <textarea
+              required
+              rows={3}
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              className="mt-2 w-full border border-white/15 bg-transparent px-3 py-2 text-sm"
+            />
+          </label>
+          {formError && <p className="text-sm text-clay">{formError}</p>}
+          <button
+            type="submit"
+            disabled={submitting}
+            className="bg-clay px-5 py-3 text-[11px] uppercase tracking-[0.22em] text-paper disabled:opacity-50"
+          >
+            {submitting ? t("signingIn") : t("adminCreatePartnerSubmit")}
+          </button>
+        </form>
+      )}
       {partners.map((p) => (
         <article key={p.id} className="border border-white/10 p-5">
           <div className="flex flex-wrap items-start justify-between gap-4">

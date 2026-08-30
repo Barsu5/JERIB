@@ -88,6 +88,8 @@ export default function LoginInner() {
         </button>
       </form>
 
+      <p className="mt-6 text-xs text-mist">{t("partnerLoginNote")}</p>
+
       <p className="mt-8 text-sm text-mist">
         {t("noAccount")}{" "}
         <Link href="/register" className="text-clay hover:underline">

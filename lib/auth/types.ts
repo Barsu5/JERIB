@@ -42,7 +42,7 @@ export type RegisterClientInput = {
   address?: string;
 };
 
-export type RegisterPartnerInput = {
+export type CreatePartnerAccountInput = {
   name: string;
   email: string;
   phone: string;

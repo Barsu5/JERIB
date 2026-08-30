@@ -1,4 +1,4 @@
-import type { PublicUser, RegisterClientInput, RegisterPartnerInput } from "@/lib/auth/types";
+import type { PublicUser, RegisterClientInput, CreatePartnerAccountInput } from "@/lib/auth/types";
 import type { DispatchOrder, Partner, PlatformSettings } from "@/lib/dispatch/types";
 import type { PrintMethod } from "@/lib/dispatch/types";
 import type { CartItem } from "@/lib/types";
@@ -52,10 +52,10 @@ export async function apiRegisterClient(input: RegisterClientInput) {
   });
 }
 
-export async function apiRegisterPartner(input: RegisterPartnerInput) {
-  return apiFetch<{ user: PublicUser }>("/api/auth/register", {
+export async function apiCreatePartnerAccount(input: CreatePartnerAccountInput) {
+  return apiFetch<{ partner: Partner; user: PublicUser }>("/api/partners/create", {
     method: "POST",
-    body: JSON.stringify({ ...input, role: "partner" }),
+    body: JSON.stringify(input),
   });
 }
 
