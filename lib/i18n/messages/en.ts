@@ -193,7 +193,7 @@ export const en = {
   adminPortal: "Jerib operations",
   adminTitle: "Admin",
   adminBody:
-    "Manage partners, zones, commissions, standards, and local order assignment across cities.",
+    "Manage partners, zones, commissions, and order assignment across Tajikistan.",
   adminAlerts: "Alerts",
   noPartnerAlert: "orders with no available partner",
   delayedOrders: "Delayed orders",

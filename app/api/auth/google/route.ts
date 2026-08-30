@@ -93,7 +93,7 @@ export async function POST(req: Request) {
           email,
           phone: "",
           passwordHash: await hashPassword(`google:${sub}`),
-          cityId: "us_new_york",
+          cityId: "tj_dushanbe",
           address: "",
           provider: "google",
           providerId: sub,

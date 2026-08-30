@@ -92,6 +92,9 @@ type AddressLayout = {
 };
 
 export function addressLayout(countryId: CountryId | string): AddressLayout {
+  if (countryId === "tj") {
+    return { showState: false, stateOptions: null, postalStyle: "eu" };
+  }
   if (countryId === "us") {
     return { showState: true, stateOptions: US_STATES, postalStyle: "us" };
   }

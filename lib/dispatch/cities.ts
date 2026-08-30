@@ -13,11 +13,14 @@ import {
 export type { City, CityId, Country, CountryId };
 export { CITIES, COUNTRIES, DEFAULT_CITY_ID, DEFAULT_COUNTRY_ID };
 
-/** Legacy Tajikistan city ids from older builds → nearest market defaults. */
+/** Map legacy city ids from older builds to Tajikistan cities. */
 const LEGACY_CITY_MAP: Record<string, CityId> = {
-  dushanbe: "us_new_york",
-  khujand: "gb_london",
-  kulob: "de_berlin",
+  dushanbe: "tj_dushanbe",
+  khujand: "tj_khujand",
+  kulob: "tj_kulob",
+  bokhtar: "tj_bokhtar",
+  istaravshan: "tj_istaravshan",
+  vahdat: "tj_vahdat",
 };
 
 export function normalizeCityId(id: string): CityId {

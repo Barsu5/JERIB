@@ -32,6 +32,7 @@ export function CountryCitySelect({
 }: Props) {
   const t = useT();
   const lang = useLang((s) => s.lang);
+  const singleCountry = COUNTRIES.length === 1;
   const [localCountry, setLocalCountry] = useState<CountryId>(countryId || DEFAULT_COUNTRY_ID);
 
   useEffect(() => {
@@ -48,21 +49,28 @@ export function CountryCitySelect({
   };
 
   return (
-    <div className={`grid gap-4 sm:grid-cols-2 ${className}`}>
-      <label className="block text-[10px] uppercase tracking-[0.22em] text-mist">
-        {t("country")}
-        <select
-          value={localCountry}
-          onChange={(e) => onCountry(e.target.value as CountryId)}
-          className="mt-2 w-full border border-white/15 bg-ink px-3 py-3 text-sm text-paper outline-none focus:border-clay"
-        >
-          {COUNTRIES.map((c) => (
-            <option key={c.id} value={c.id}>
-              {countryLabel(c.id, lang)}
-            </option>
-          ))}
-        </select>
-      </label>
+    <div className={`grid gap-4 ${singleCountry ? "" : "sm:grid-cols-2"} ${className}`}>
+      {singleCountry ? (
+        <p className="text-[10px] uppercase tracking-[0.22em] text-mist">
+          {t("country")}:{" "}
+          <span className="text-paper">{countryLabel(localCountry, lang)}</span>
+        </p>
+      ) : (
+        <label className="block text-[10px] uppercase tracking-[0.22em] text-mist">
+          {t("country")}
+          <select
+            value={localCountry}
+            onChange={(e) => onCountry(e.target.value as CountryId)}
+            className="mt-2 w-full border border-white/15 bg-ink px-3 py-3 text-sm text-paper outline-none focus:border-clay"
+          >
+            {COUNTRIES.map((c) => (
+              <option key={c.id} value={c.id}>
+                {countryLabel(c.id, lang)}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       <label className="block text-[10px] uppercase tracking-[0.22em] text-mist">
         {t("city")}
         <select

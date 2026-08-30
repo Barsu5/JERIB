@@ -47,7 +47,7 @@ model User {
   email        String       @unique
   phone        String       @default("")
   passwordHash String
-  cityId       String       @default("us_new_york")
+  cityId       String       @default("tj_dushanbe")
   address      String       @default("")
   provider     AuthProvider @default(email)
   providerId   String?
