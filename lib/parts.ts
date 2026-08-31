@@ -65,10 +65,6 @@ export const PARTS: Record<ProductId, PartDef[]> = {
     p("logo_back", "Back logo", "back", "body", 38, 22, 24, 16),
     p("number_back", "Number", "back", "body", 40, 42, 20, 14),
   ],
-  football_socks: [
-    p("calf_front", "Front", "front", "body", 36, 30, 28, 38),
-    p("calf_back", "Back", "back", "body", 36, 30, 28, 38),
-  ],
 };
 
 export const COLOR_KEYS: Record<ProductId, { id: string; label: string }[]> = {
@@ -83,10 +79,6 @@ export const COLOR_KEYS: Record<ProductId, { id: string; label: string }[]> = {
     { id: "collar", label: "Collar" },
   ],
   football_shorts: [{ id: "body", label: "Shorts" }],
-  football_socks: [
-    { id: "body", label: "Sock" },
-    { id: "stripes", label: "Stripes" },
-  ],
 };
 
 export function isSleeveZone(id: string) {

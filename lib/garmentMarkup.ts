@@ -73,22 +73,6 @@ export function garmentSvgMarkup(
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 420">${inner}</svg>`;
   }
 
-  if (product === "football_socks") {
-    const bodyColor = pick("body");
-    const stripeColor = pick("stripes", shade(bodyColor, 40));
-    const pair =
-      view === "front"
-        ? `<rect x="118" y="60" width="52" height="280" rx="18" fill="${bodyColor}"/>
-           <rect x="190" y="60" width="52" height="280" rx="18" fill="${bodyColor}"/>
-           <rect x="118" y="140" width="52" height="16" fill="${stripeColor}"/>
-           <rect x="190" y="140" width="52" height="16" fill="${stripeColor}"/>
-           <rect x="118" y="200" width="52" height="16" fill="${stripeColor}"/>
-           <rect x="190" y="200" width="52" height="16" fill="${stripeColor}"/>`
-        : `<rect x="118" y="60" width="52" height="280" rx="18" fill="${bodyColor}"/>
-           <rect x="190" y="60" width="52" height="280" rx="18" fill="${bodyColor}"/>`;
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 420">${pair}</svg>`;
-  }
-
   if (product === "cap") {
     const inner =
       view === "front"

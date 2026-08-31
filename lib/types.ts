@@ -5,8 +5,7 @@ export type ProductId =
   | "cap"
   | "pants"
   | "football_jersey"
-  | "football_shorts"
-  | "football_socks";
+  | "football_shorts";
 
 export function isFootballProduct(id: ProductId) {
   return id.startsWith("football_");

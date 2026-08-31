@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { GarmentSvg } from "@/components/GarmentSvg";
+import { garmentPhotoPath } from "@/lib/garmentPhotos";
 import { layerVisibleOnView } from "@/lib/parts";
 import type { LookDesign } from "@/lib/designTexture";
 import type { DesignLayer, View } from "@/lib/types";
@@ -88,7 +89,7 @@ export async function exportDesignPng(design: LookDesign, view: View = "front") 
   ctx.fillStyle = "#1a1714";
   ctx.fillRect(0, 0, size, size);
 
-  const photo = await loadImage(`/garments/${design.productId}-${view}.png`);
+  const photo = await loadImage(garmentPhotoPath(design.productId, view));
   const scale = Math.min(size / photo.naturalWidth, size / photo.naturalHeight) * 0.9;
   const dw = Math.round(photo.naturalWidth * scale);
   const dh = Math.round(photo.naturalHeight * scale);

@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import type { ProductId } from "@/lib/types";
 import { GarmentSvg } from "@/components/GarmentSvg";
 import { PlacementGuides } from "@/components/PlacementGuides";
-import { AiDesignPanel } from "@/components/AiDesignPanel";
 import {
   COLORS,
   CASUAL_PRODUCTS,
@@ -326,27 +325,6 @@ export function Studio() {
     router.push("/look");
   };
 
-  const placeAiImage = (dataUrl: string) => {
-    addLayer("image", dataUrl);
-  };
-
-  const placeFootballName = (name: string) => {
-    const zone = productId === "football_jersey" ? "back_name" : "chest";
-    setPlacement(zone);
-    setView(productId === "football_jersey" ? "back" : "front");
-    addLayer("text", name, "#f3eee6");
-  };
-
-  const placeFootballNumber = (num: string) => {
-    setPlacement("number_back");
-    setView("back");
-    addLayer("text", num, "#f3eee6");
-    queueMicrotask(() => {
-      const id = useStudio.getState().selectedId;
-      if (id) updateLayer(id, { scale: 1.6 });
-    });
-  };
-
   const renderProductButton = (id: ProductId) => {
     const p = productById(id);
     return (
@@ -530,16 +508,6 @@ export function Studio() {
         <p className="mt-8 max-w-md text-center text-sm text-mist">
           {t(`blurb_${productId}` as DictKey)}
         </p>
-
-        <div className="mt-8 w-full max-w-[520px] border-t border-white/10 pt-8">
-          <p className="mb-4 text-[10px] uppercase tracking-[0.28em] text-clay">{t("aiEditor")}</p>
-          <AiDesignPanel
-            productId={productId}
-            onGenerated={placeAiImage}
-            onAddName={placeFootballName}
-            onAddNumber={placeFootballNumber}
-          />
-        </div>
       </section>
 
       <aside className="order-3 space-y-8 border-t border-white/10 px-6 py-8 lg:border-l lg:border-t-0 lg:py-10">

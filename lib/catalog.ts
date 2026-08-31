@@ -2,7 +2,7 @@ import type { ColorOption, Product, ProductId } from "./types";
 import { PARTS } from "./parts";
 
 export const CASUAL_PRODUCTS: ProductId[] = ["tshirt", "hoodie", "sweatshirt", "cap", "pants"];
-export const FOOTBALL_PRODUCTS: ProductId[] = ["football_jersey", "football_shorts", "football_socks"];
+export const FOOTBALL_PRODUCTS: ProductId[] = ["football_jersey", "football_shorts"];
 
 export const COLORS: ColorOption[] = [
   { id: "black", name: "Black", hex: "#141414" },
@@ -66,13 +66,6 @@ export const PRODUCTS: Product[] = [
     blurb: "Match shorts. Thigh and back print zones.",
     price: 85,
     placements: PARTS.football_shorts,
-  },
-  {
-    id: "football_socks",
-    name: "Football Socks",
-    blurb: "Knee socks for full kit. Front and back calf print.",
-    price: 45,
-    placements: PARTS.football_socks,
   },
 ];
 
