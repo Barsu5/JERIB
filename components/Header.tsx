@@ -42,7 +42,7 @@ export function Header() {
   return (
     <header className={`fixed inset-x-0 top-0 z-40 ${headerClass}`}>
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4">
-        <BrandMark />
+        <BrandMark animated />
         <nav className="flex flex-wrap items-center justify-end gap-4 text-[11px] uppercase tracking-[0.22em] sm:gap-6">
           <div className="flex items-center gap-1.5 normal-case tracking-[0.12em]">
             {LANGS.map((l) => (

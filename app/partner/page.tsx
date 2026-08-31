@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PartnerOrderCard } from "@/components/partner/PartnerOrderCard";
+import { BrandMark } from "@/components/BrandMark";
 import { useAuth, useSessionUser, useAuthHydrated } from "@/lib/auth/store";
 import { formatPrice } from "@/lib/catalog";
 import { cityLabel } from "@/lib/dispatch/cities";
@@ -468,9 +469,7 @@ export default function PartnerPanelPage() {
         )}
 
         <p className="mt-16 text-[11px] text-mist">
-          <Link href="/" className="hover:text-clay">
-            JIRIB
-          </Link>
+          <BrandMark href="/" size="nav" animated className="inline-flex" />
           {" · "}
           <Link href="/admin" className="text-clay hover:underline">
             {t("adminLink")}

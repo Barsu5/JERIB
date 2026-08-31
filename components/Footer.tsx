@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BrandMark } from "@/components/BrandMark";
+import { BrandMark, BrandInText } from "@/components/BrandMark";
 import { useT } from "@/lib/i18n";
 
 export function Footer() {
@@ -12,7 +12,7 @@ export function Footer() {
     <footer className="border-t border-slate-200 bg-white text-slate-600">
       <div className="mx-auto flex max-w-6xl flex-col gap-8 px-6 py-12 sm:flex-row sm:items-start sm:justify-between">
         <div className="max-w-sm">
-          <BrandMark />
+          <BrandMark animated />
           <p className="mt-4 text-sm leading-relaxed">{t("footerTagline")}</p>
         </div>
         <nav className="flex flex-wrap gap-x-10 gap-y-4 text-sm font-medium text-slate-900">
@@ -28,7 +28,7 @@ export function Footer() {
         </nav>
       </div>
       <div className="border-t border-slate-100 px-6 py-4 text-center text-xs text-slate-400">
-        © {year} JIRIB. {t("footerRights")}
+        © {year} <BrandMark href={undefined} size="inline" animated className="mx-1" />. {t("footerRights")}
       </div>
     </footer>
   );

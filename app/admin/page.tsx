@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth, useSessionUser, useAuthHydrated } from "@/lib/auth/store";
 import { authErrorKey } from "@/lib/auth/errors";
 import { CountryCitySelect } from "@/components/CountryCitySelect";
+import { BrandInText } from "@/components/BrandMark";
 import { formatPrice } from "@/lib/catalog";
 import { DEFAULT_CITY_ID, DEFAULT_COUNTRY_ID, normalizeCityId, CITIES, cityLabel, locationLabel } from "@/lib/dispatch/cities";
 import { QUALITY_STANDARDS } from "@/lib/dispatch/standards";
@@ -87,7 +88,9 @@ export default function AdminPage() {
     <main className="mx-auto min-h-screen max-w-6xl px-6 pb-24 pt-28">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.32em] text-clay">{t("adminPortal")}</p>
+          <p className="text-[10px] uppercase tracking-[0.32em] text-clay">
+            <BrandInText text={t("adminPortal")} />
+          </p>
           <h1 className="mt-2 font-display text-5xl">{t("adminTitle")}</h1>
           <p className="mt-3 max-w-2xl text-sm text-mist">{t("adminBody")}</p>
         </div>

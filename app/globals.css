@@ -155,6 +155,14 @@ input[type="range"] {
   .hero-color-swatch span:nth-child(4) {
     animation-delay: 1.2s;
   }
+
+  .brand-logo-animate {
+    animation: brand-logo-float 4s ease-in-out infinite;
+  }
+
+  .brand-logo-badge {
+    animation: hero-stamp 2.8s ease-in-out infinite;
+  }
 }
 
 @keyframes hero-float {
@@ -220,5 +228,17 @@ input[type="range"] {
   }
   40% {
     transform: scale(1.15);
+  }
+}
+
+@keyframes brand-logo-float {
+  0%,
+  100% {
+    transform: translateY(0);
+    filter: drop-shadow(0 0 0 transparent);
+  }
+  50% {
+    transform: translateY(-3px);
+    filter: drop-shadow(0 6px 14px rgba(156, 43, 43, 0.28));
   }
 }

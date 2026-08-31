@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import QuickAuth from "@/components/QuickAuth";
+import { BrandInText } from "@/components/BrandMark";
 import { DEMO_ACCOUNTS, homeForRole, useAuth, useAuthHydrated } from "@/lib/auth/store";
 import { authErrorKey } from "@/lib/auth/errors";
 import { useT } from "@/lib/i18n";
@@ -72,7 +73,9 @@ export default function LoginInner() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 pb-24 pt-28">
-      <p className="text-[10px] uppercase tracking-[0.32em] text-clay">{t("authPortal")}</p>
+      <p className="text-[10px] uppercase tracking-[0.32em] text-clay">
+        <BrandInText text={t("authPortal")} />
+      </p>
       <h1 className="mt-3 font-display text-5xl">{t("loginTitle")}</h1>
       <p className="mt-3 text-sm text-mist">
         {audience === "partner" ? t("loginBodyPartner") : t("loginBody")}

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Footer } from "@/components/Footer";
+import { BrandInText } from "@/components/BrandMark";
 import { HeroMockupGrid } from "@/components/marketing/HeroMockupGrid";
 import { productById, CASUAL_PRODUCTS, FOOTBALL_PRODUCTS } from "@/lib/catalog";
 import { useT, type DictKey } from "@/lib/i18n";
@@ -10,7 +11,7 @@ function SectionHeading({ title, intro, dark }: { title: string; intro?: string;
   return (
     <div className="mx-auto mb-12 max-w-3xl text-center">
       <h2 className={`text-3xl font-bold tracking-tight sm:text-4xl ${dark ? "text-white" : "text-slate-900"}`}>
-        {title}
+        <BrandInText text={title} />
       </h2>
       {intro && (
         <p className={`mt-4 text-base leading-relaxed ${dark ? "text-slate-300" : "text-slate-600"}`}>{intro}</p>
@@ -77,12 +78,14 @@ export default function HomePage() {
         {/* Hero — Printful-style dark navy block */}
         <section className="bg-navy pt-24 text-white">
           <div className="mx-auto max-w-6xl px-6 pb-6 pt-4">
-            <p className="text-sm text-slate-400">{t("homeBreadcrumb")}</p>
+            <p className="text-sm text-slate-400">
+              <BrandInText text={t("homeBreadcrumb")} />
+            </p>
           </div>
           <div className="mx-auto grid max-w-6xl gap-12 px-6 pb-20 lg:grid-cols-2 lg:items-center lg:gap-16">
             <div>
               <h1 className="text-4xl font-bold leading-tight tracking-tight sm:text-5xl lg:text-[3.25rem] lg:leading-[1.1]">
-                {t("homeHeroTitle")}
+                <BrandInText text={t("homeHeroTitle")} />
               </h1>
               <p className="mt-6 max-w-lg text-base leading-relaxed text-slate-300">{t("homeHeroSub")}</p>
               <div className="mt-8 flex flex-wrap items-center gap-8">

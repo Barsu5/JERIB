@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import { garmentSvgMarkup } from "@/lib/garmentMarkup";
 import type { ProductId } from "@/lib/types";
 import { useT, type DictKey } from "@/lib/i18n";
@@ -26,6 +27,23 @@ type TileConfig = {
 
 function ScanLine() {
   return <div className="hero-scan-line pointer-events-none absolute inset-x-4 z-20 h-px bg-clay/70 shadow-[0_0_12px_rgba(156,43,43,0.5)]" />;
+}
+
+function LogoBadge({ className, delay = 0 }: { className?: string; delay?: number }) {
+  return (
+    <div
+      className={`brand-logo-badge absolute z-10 ${className ?? ""}`}
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <Image
+        src="/brand/jerib-logo-nobg.png"
+        alt="JIRIB"
+        width={879}
+        height={246}
+        className="h-full w-full object-contain drop-shadow-md"
+      />
+    </div>
+  );
 }
 
 function PrintBadge({
@@ -136,7 +154,7 @@ export function HeroMockupGrid() {
         <div className="relative mt-2 w-full flex-1">
           <GarmentPreview product="hoodie" color={hoodieColor} large />
           <ZoneGuide className="left-[34%] top-[22%] h-[18%] w-[32%]" />
-          <PrintBadge label="JIRIB" delay={400} className="left-[36%] top-[26%] h-7 w-14 text-[9px] tracking-widest" />
+          <LogoBadge delay={400} className="left-[34%] top-[24%] h-8 w-[4.5rem]" />
           <ScanLine />
           <div className="hero-color-swatch absolute bottom-3 left-3 flex gap-1.5">
             {HOODIE_COLORS.map((c) => (
