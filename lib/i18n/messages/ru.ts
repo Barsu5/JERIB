@@ -139,6 +139,7 @@ export const ru = {
   aiPromptPlaceholder: "например: красный лев, эмблема команды…",
   aiGenerate: "Создать с AI",
   aiGenerating: "Генерация…",
+  aiGeneratingWait: "Генерация… подождите 10–30 секунд",
   aiGenerateFailed: "Не удалось создать. Попробуйте ещё раз.",
   aiStyle_emblem: "Эмблема",
   aiStyle_stripes: "Полоски",

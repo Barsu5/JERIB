@@ -138,6 +138,7 @@ export const en = {
   aiPromptPlaceholder: "e.g. red lion emblem, team crest…",
   aiGenerate: "Generate with AI",
   aiGenerating: "Generating…",
+  aiGeneratingWait: "Generating… this may take 10–30 seconds",
   aiGenerateFailed: "Could not generate. Try again.",
   aiStyle_emblem: "Emblem",
   aiStyle_stripes: "Stripes",

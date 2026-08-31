@@ -140,6 +140,7 @@ export const tg = {
   aiPromptPlaceholder: "масалан: нишони шер, рамзи даста…",
   aiGenerate: "Бо AI эҷод кунед",
   aiGenerating: "Эҷод карда мешавад…",
+  aiGeneratingWait: "Эҷод карда мешавад… 10–30 сония интизор шавед",
   aiGenerateFailed: "Эҷод нашуд. Боз кӯшиш кунед.",
   aiStyle_emblem: "Нишон",
   aiStyle_stripes: "Хатҳо",

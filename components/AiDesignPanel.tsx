@@ -81,7 +81,7 @@ export function AiDesignPanel({ productId, onGenerated, onAddNumber, onAddName }
         onClick={() => void generate()}
         className="w-full bg-clay py-3 text-[11px] uppercase tracking-[0.22em] text-paper disabled:opacity-50"
       >
-        {busy ? t("aiGenerating") : t("aiGenerate")}
+        {busy ? t("aiGeneratingWait") : t("aiGenerate")}
       </button>
 
       <div className="grid grid-cols-2 gap-1">
