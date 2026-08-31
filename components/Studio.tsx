@@ -14,10 +14,8 @@ import {
   SIZES,
   SYMBOLS,
   colorById,
-  formatPrice,
   productById,
 } from "@/lib/catalog";
-import { useDispatch } from "@/lib/dispatch/store";
 import { useT, type DictKey } from "@/lib/i18n";
 import {
   alignInZone,
@@ -26,7 +24,6 @@ import {
   suggestedScales,
   type AlignMode,
 } from "@/lib/placement";
-import { minClientUnitPrice } from "@/lib/pricing";
 import { removeImageBackground } from "@/lib/removeBackground";
 import { isSleeveZone, layerVisibleOnView, partsFor, PARTS, COLOR_KEYS } from "@/lib/parts";
 import { useShop, useStudio } from "@/lib/store";
@@ -157,7 +154,6 @@ function DrawPad({ onDone }: { onDone: (data: string) => void }) {
 
 export function Studio() {
   const t = useT();
-  const partners = useDispatch((s) => s.partners);
   const router = useRouter();
   const search = useSearchParams();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -325,30 +321,19 @@ export function Studio() {
     router.push("/look");
   };
 
-  const renderProductButton = (id: ProductId) => {
-    const p = productById(id);
-    return (
-      <li key={p.id} className="shrink-0">
-        <button
-          type="button"
-          onClick={() => setProduct(p.id)}
-          className={`w-full px-3 py-3 text-left text-sm ${
-            productId === p.id ? "bg-paper text-ink" : "hover:bg-white/5"
-          }`}
-        >
-          <span className="block font-display text-lg">{t(`product_${p.id}` as DictKey)}</span>
-          <span className="text-[11px] text-mist">
-            {(() => {
-              const from = minClientUnitPrice(partners, p.id);
-              return from != null
-                ? t("fromPrice").replace("{price}", formatPrice(from))
-                : formatPrice(p.price);
-            })()}
-          </span>
-        </button>
-      </li>
-    );
-  };
+  const renderProductButton = (id: ProductId) => (
+    <li key={id} className="shrink-0">
+      <button
+        type="button"
+        onClick={() => setProduct(id)}
+        className={`w-full px-3 py-3 text-left text-sm ${
+          productId === id ? "bg-paper text-ink" : "hover:bg-white/5"
+        }`}
+      >
+        <span className="block font-display text-lg">{t(`product_${id}` as DictKey)}</span>
+      </button>
+    </li>
+  );
 
   return (
     <div className="grid min-h-screen grid-cols-1 pt-16 lg:grid-cols-[240px_1fr_300px]">
