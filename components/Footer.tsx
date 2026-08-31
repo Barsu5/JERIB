@@ -28,7 +28,7 @@ export function Footer() {
         </nav>
       </div>
       <div className="border-t border-slate-100 px-6 py-4 text-center text-xs text-slate-400">
-        © {year} JERIB. {t("footerRights")}
+        © {year} JIRIB. {t("footerRights")}
       </div>
     </footer>
   );

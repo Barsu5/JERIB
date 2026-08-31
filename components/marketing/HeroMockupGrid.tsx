@@ -136,7 +136,7 @@ export function HeroMockupGrid() {
         <div className="relative mt-2 w-full flex-1">
           <GarmentPreview product="hoodie" color={hoodieColor} large />
           <ZoneGuide className="left-[34%] top-[22%] h-[18%] w-[32%]" />
-          <PrintBadge label="JERIB" delay={400} className="left-[36%] top-[26%] h-7 w-14 text-[9px] tracking-widest" />
+          <PrintBadge label="JIRIB" delay={400} className="left-[36%] top-[26%] h-7 w-14 text-[9px] tracking-widest" />
           <ScanLine />
           <div className="hero-color-swatch absolute bottom-3 left-3 flex gap-1.5">
             {HOODIE_COLORS.map((c) => (

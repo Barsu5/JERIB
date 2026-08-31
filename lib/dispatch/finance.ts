@@ -11,7 +11,7 @@ export function productionCostFor(partner: Partner, items: CartItem[]) {
 
 /**
  * Client pays partner production + 150 сом service per unit.
- * Jerib revenue ≈ service fees − payment fee − delivery − other.
+ * JIRIB revenue ≈ service fees − payment fee − delivery − other.
  */
 export function calcFinance(
   clientTotal: number,

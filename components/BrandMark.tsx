@@ -8,7 +8,7 @@ type BrandMarkProps = {
   className?: string;
 };
 
-/** Pattern-filled JERIB wordmark from brand asset */
+/** Pattern-filled JIRIB wordmark from brand asset */
 export function BrandMark({
   href = "/",
   size = "nav",
@@ -19,7 +19,7 @@ export function BrandMark({
     size === "hero" ? (
       <Image
         src="/brand/jerib-logo-nobg.png"
-        alt="JERIB"
+        alt="JIRIB"
         width={879}
         height={246}
         priority
@@ -28,7 +28,7 @@ export function BrandMark({
     ) : (
       <Image
         src="/brand/jerib-logo-nobg.png"
-        alt="JERIB"
+        alt="JIRIB"
         width={879}
         height={246}
         className={`h-8 w-auto sm:h-9 ${className}`}

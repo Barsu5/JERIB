@@ -159,7 +159,7 @@ export function Studio() {
   const fileRef = useRef<HTMLInputElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
   const [tool, setTool] = useState<LayerKind | "color" | "ai" | null>("text");
-  const [text, setText] = useState("JERIB");
+  const [text, setText] = useState("JIRIB");
   const [removeBg, setRemoveBg] = useState(true);
   const [bgBusy, setBgBusy] = useState(false);
   const [bgError, setBgError] = useState(false);
@@ -700,7 +700,7 @@ export function Studio() {
             <button
               type="button"
               className="text-[11px] uppercase tracking-[0.2em] text-clay"
-              onClick={() => addLayer("text", text || "JERIB")}
+              onClick={() => addLayer("text", text || "JIRIB")}
             >
               {t("placeText")} {t(`zone_${placement}` as DictKey)}
             </button>

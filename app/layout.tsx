@@ -19,8 +19,8 @@ const sans = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "JERIB — Pamir heritage wear",
-  description: "Custom clothing with Pamir heritage. Design with Jerib — local partners produce and deliver.",
+  title: "JIRIB — Pamir heritage wear",
+  description: "Custom clothing with Pamir heritage. Design with JIRIB — local partners produce and deliver.",
   icons: {
     icon: "/brand/jerib-logo-trim.png",
     apple: "/brand/jerib-logo-trim.png",

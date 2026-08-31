@@ -469,7 +469,7 @@ export default function PartnerPanelPage() {
 
         <p className="mt-16 text-[11px] text-mist">
           <Link href="/" className="hover:text-clay">
-            JERIB
+            JIRIB
           </Link>
           {" · "}
           <Link href="/admin" className="text-clay hover:underline">

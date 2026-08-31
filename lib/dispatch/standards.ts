@@ -1,11 +1,11 @@
 import type { QualityStandard } from "./types";
 
-/** Unified JERIB production standards — partners must not alter client design */
+/** Unified JIRIB production standards — partners must not alter client design */
 export const QUALITY_STANDARDS: QualityStandard[] = [
   {
     id: "garment",
     title: "Качество одежды",
-    body: "Использовать только одобренные JERIB ткани и конструкции. Брак по швам, посадке или материалу не допускается к отгрузке.",
+    body: "Использовать только одобренные JIRIB ткани и конструкции. Брак по швам, посадке или материалу не допускается к отгрузке.",
   },
   {
     id: "print",
@@ -20,7 +20,7 @@ export const QUALITY_STANDARDS: QualityStandard[] = [
   {
     id: "size",
     title: "Размер принта",
-    body: "Масштаб принта берётся из файла заказа. Изменение размера без согласования с JERIB запрещено.",
+    body: "Масштаб принта берётся из файла заказа. Изменение размера без согласования с JIRIB запрещено.",
   },
   {
     id: "color",
@@ -30,16 +30,16 @@ export const QUALITY_STANDARDS: QualityStandard[] = [
   {
     id: "packaging",
     title: "Упаковка",
-    body: "Каждое изделие — в фирменной упаковке JERIB с защитой принта. Без сторонних брендов партнёра.",
+    body: "Каждое изделие — в фирменной упаковке JIRIB с защитой принта. Без сторонних брендов партнёра.",
   },
   {
     id: "logo",
-    title: "Логотип JERIB",
-    body: "Обязательная внутренняя бирка / этикетка JERIB. Логотип партнёра на изделии клиента не размещается.",
+    title: "Логотип JIRIB",
+    body: "Обязательная внутренняя бирка / этикетка JIRIB. Логотип партнёра на изделии клиента не размещается.",
   },
   {
     id: "design_lock",
     title: "Целостность дизайна",
-    body: "Партнёр не меняет дизайн клиента. Любые правки — только через JERIB.",
+    body: "Партнёр не меняет дизайн клиента. Любые правки — только через JIRIB.",
   },
 ];

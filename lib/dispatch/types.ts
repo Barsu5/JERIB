@@ -47,7 +47,7 @@ export type Partner = {
   acceptsRemoteDelivery: boolean;
   printMethods: PrintMethod[];
   products: ProductId[];
-  /** Production cost charged to JERIB per unit */
+  /** Production cost charged to JIRIB per unit */
   productionPrices: Partial<Record<ProductId, number>>;
   minOrderQty: number;
   /** Max units in active production */
