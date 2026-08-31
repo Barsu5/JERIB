@@ -2,49 +2,9 @@
 
 import Link from "next/link";
 import { Footer } from "@/components/Footer";
+import { HeroMockupGrid } from "@/components/marketing/HeroMockupGrid";
 import { productById, CASUAL_PRODUCTS, FOOTBALL_PRODUCTS } from "@/lib/catalog";
 import { useT, type DictKey } from "@/lib/i18n";
-
-function HeroMockupGrid() {
-  const t = useT();
-  const tiles = [
-    { bg: "bg-slate-100", product: "hoodie" as const, large: true },
-    { bg: "bg-sky-100", product: "tshirt" as const },
-    { bg: "bg-slate-800", product: "cap" as const, dark: true },
-    { bg: "bg-amber-100", product: "football_jersey" as const },
-  ];
-
-  return (
-    <div className="grid h-full min-h-[320px] grid-cols-[1.4fr_1fr] gap-3 sm:min-h-[400px]">
-      <div
-        className={`relative overflow-hidden rounded-2xl ${tiles[0].bg} flex flex-col items-center justify-center p-6`}
-      >
-        <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent" />
-        <span className="relative text-xs font-semibold uppercase tracking-widest text-slate-400">
-          {t(`product_${tiles[0].product}` as DictKey)}
-        </span>
-        <div className="relative mt-4 h-40 w-32 rounded-xl border-2 border-dashed border-slate-300 bg-white/60 sm:h-52 sm:w-40" />
-      </div>
-      <div className="grid grid-rows-3 gap-3">
-        {tiles.slice(1).map((tile) => (
-          <div
-            key={tile.product}
-            className={`relative overflow-hidden rounded-2xl ${tile.bg} flex flex-col items-center justify-center p-3`}
-          >
-            <span
-              className={`text-[10px] font-semibold uppercase tracking-widest ${tile.dark ? "text-slate-400" : "text-slate-500"}`}
-            >
-              {t(`product_${tile.product}` as DictKey)}
-            </span>
-            <div
-              className={`mt-2 h-10 w-14 rounded-lg border border-dashed sm:h-12 sm:w-16 ${tile.dark ? "border-slate-600 bg-slate-700/50" : "border-slate-300 bg-white/50"}`}
-            />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 function SectionHeading({ title, intro, dark }: { title: string; intro?: string; dark?: boolean }) {
   return (
