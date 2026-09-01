@@ -1,9 +1,9 @@
 export const en = {
   create: "Create",
   cart: "Cart",
-  atelier: "Pamir heritage wear",
+  atelier: "Print studio",
   heroTitle1: "JIRIB",
-  heroTitle2: "Pamir heritage wear",
+  heroTitle2: "Custom clothing",
   heroBody:
     "Choose a garment. Mark it with your design. JIRIB connects you to a nearby workshop — print, pack, deliver.",
   heroLine: "Your pattern on real cloth.",
@@ -415,7 +415,7 @@ export const en = {
   homeTrust3Body: "Every piece matches your studio preview before production.",
   homeTrust4Title: "You're in control",
   homeTrust4Body: "Choose product, zones, colors, and size — we handle the rest.",
-  footerTagline: "Pamir heritage wear — print on demand in Tajikistan.",
+  footerTagline: "Print on demand in Tajikistan.",
   footerStudio: "Studio",
   footerLogin: "Log in",
   footerRegister: "Register",

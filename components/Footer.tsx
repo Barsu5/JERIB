@@ -13,7 +13,6 @@ export function Footer() {
       <div className="mx-auto flex max-w-6xl flex-col gap-8 px-6 py-12 sm:flex-row sm:items-start sm:justify-between">
         <div className="max-w-sm">
           <BrandMark animated />
-          <p className="mt-4 text-sm leading-relaxed">{t("footerTagline")}</p>
         </div>
         <nav className="flex flex-wrap gap-x-10 gap-y-4 text-sm font-medium text-slate-900">
           <Link href="/studio" className="hover:text-clay">
@@ -28,7 +27,7 @@ export function Footer() {
         </nav>
       </div>
       <div className="border-t border-slate-100 px-6 py-4 text-center text-xs text-slate-400">
-        © {year} <BrandMark href={undefined} size="inline" animated className="mx-1" />. {t("footerRights")}
+        © {year} <BrandMark href={null} size="inline" animated className="mx-1" />. {t("footerRights")}
       </div>
     </footer>
   );

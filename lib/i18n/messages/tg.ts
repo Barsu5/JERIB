@@ -3,9 +3,9 @@ import type { en } from "./en";
 export const tg = {
   create: "Сохтан",
   cart: "Сабад",
-  atelier: "Pamir heritage wear",
+  atelier: "Студияи чоп",
   heroTitle1: "JIRIB",
-  heroTitle2: "Pamir heritage wear",
+  heroTitle2: "Либоси фармоишӣ",
   heroBody:
     "Либос интихоб кунед. Бо дизайни худ қайд кунед. JIRIB шуморо ба муассисаи наздик васл мекунад — чоп, бастабандӣ, дастраскунӣ.",
   heroLine: "Нақши шумо бар рӯи манъаи воқеӣ.",
@@ -417,7 +417,7 @@ export const tg = {
   homeTrust3Body: "Ҳар ашё пеш аз истеҳсол ба пешнамоиши студия мувофиқ аст.",
   homeTrust4Title: "Шумо идора мекунед",
   homeTrust4Body: "Маҳсулот, зонаҳо, рангҳо ва андозаро интихоб кунед — боқимондааш моро.",
-  footerTagline: "Pamir heritage wear — чоп ба талаб дар Тоҷикистон.",
+  footerTagline: "Чоп ба талаб дар Тоҷикистон.",
   footerStudio: "Студия",
   footerLogin: "Вуруд",
   footerRegister: "Сабти ном",
