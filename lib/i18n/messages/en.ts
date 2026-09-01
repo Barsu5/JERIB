@@ -415,7 +415,7 @@ export const en = {
   homeTrust3Body: "Every piece matches your studio preview before production.",
   homeTrust4Title: "You're in control",
   homeTrust4Body: "Choose product, zones, colors, and size — we handle the rest.",
-  footerTagline: "Print on demand in Tajikistan.",
+  devPreviewHint: "Local preview — changes appear instantly after save",
   footerStudio: "Studio",
   footerLogin: "Log in",
   footerRegister: "Register",

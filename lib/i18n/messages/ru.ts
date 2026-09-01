@@ -407,7 +407,7 @@ export const ru = {
   homeTrust3Body: "Каждая вещь соответствует превью в студии до производства.",
   homeTrust4Title: "Вы управляете",
   homeTrust4Body: "Выбирайте изделие, зоны, цвета и размер — остальное мы.",
-  footerTagline: "Печать по запросу в Таджикистане.",
+  devPreviewHint: "Локальный просмотр — изменения видны сразу после сохранения",
   footerStudio: "Студия",
   footerLogin: "Войти",
   footerRegister: "Регистрация",
