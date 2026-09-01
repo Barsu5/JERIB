@@ -6,6 +6,7 @@ import { PAYMENT_BANKS, bankById } from "@/lib/payment/banks";
 import type { DispatchOrder } from "@/lib/dispatch/types";
 import type { PaymentBankId } from "@/lib/payment/types";
 import { isPartnerDispatchEnabled } from "@/lib/dispatch/config";
+import { useDispatch } from "@/lib/dispatch/store";
 import { useLang, useT } from "@/lib/i18n";
 
 type Props = {
