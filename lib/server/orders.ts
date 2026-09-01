@@ -71,8 +71,7 @@ export async function createAndDispatchOrder(input: {
   printMethod?: PrintMethod;
 }) {
   const [partners, settings] = await Promise.all([loadPartners(), ensureSettings()]);
-  let order = createOrderDraft(input);
-  order = tryAssign(order, partners, settings, Date.now());
+  const order = createOrderDraft(input);
   await saveOrder(order);
   return order;
 }

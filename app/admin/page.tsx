@@ -14,6 +14,8 @@ import { partnerById, statusLabel, useDispatch } from "@/lib/dispatch/store";
 import type { Partner, PartnerApproval } from "@/lib/dispatch/types";
 import { useDispatchTick } from "@/lib/dispatch/useDispatchTick";
 import { useLang, useT, type DictKey } from "@/lib/i18n";
+import { paymentStatusLabel } from "@/lib/payment/labels";
+import { isPartnerDispatchEnabled } from "@/lib/dispatch/config";
 
 type AdminTab = "orders" | "partners" | "cities" | "standards" | "settings";
 
@@ -37,7 +39,10 @@ export default function AdminPage() {
   const setSettings = useDispatch((s) => s.adminSetSettings);
   const setLoad = useDispatch((s) => s.adminSetLoad);
   const markPaid = useDispatch((s) => s.adminMarkPayoutPaid);
+  const confirmPayment = useDispatch((s) => s.adminConfirmPayment);
+  const rejectPayment = useDispatch((s) => s.adminRejectPayment);
   const forceExpire = useDispatch((s) => s.forceExpireOffer);
+  const manualMode = !isPartnerDispatchEnabled();
 
   const alerts = orders.filter((o) => o.adminAlert || o.status === "failed_no_partner");
   const delayed = orders.filter(
@@ -147,33 +152,65 @@ export default function AdminPage() {
                   <div>
                     <p className="text-[10px] uppercase tracking-[0.24em] text-mist">{o.id}</p>
                     <p className="mt-1 font-display text-2xl">{statusLabel(o.status, lang)}</p>
+                    {o.payment && o.payment.status !== "confirmed" && (
+                      <p className="mt-1 text-sm text-clay">
+                        {paymentStatusLabel(o.payment.status, lang)}
+                      </p>
+                    )}
                     <p className="mt-2 text-sm text-mist">
                       {o.name} · {cityLabel(o.cityId, lang)} · {formatPrice(o.total)}
                     </p>
                     <p className="mt-1 text-sm">
-                      {t("assignedPartner")}:{" "}
-                      <span className="text-clay">{partner?.name ?? "—"}</span>
+                      {!manualMode && (
+                        <>
+                          {t("assignedPartner")}:{" "}
+                          <span className="text-clay">{partner?.name ?? "—"}</span>
+                        </>
+                      )}
+                      {manualMode && o.payment?.status === "confirmed" && (
+                        <span className="text-clay">{t("manualOrderReceived")}</span>
+                      )}
                     </p>
                   </div>
                   <div className="flex flex-col gap-2">
-                    <select
-                      className="border border-white/15 bg-ink px-3 py-2 text-sm"
-                      defaultValue=""
-                      onChange={(e) => {
-                        if (e.target.value) reassign(o.id, e.target.value);
-                        e.target.value = "";
-                      }}
-                    >
-                      <option value="">{t("reassignTo")}</option>
-                      {partners
-                        .filter((p) => p.approval === "approved")
-                        .map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.name}
-                          </option>
-                        ))}
-                    </select>
-                    {o.status === "offered" && (
+                    {!manualMode && (
+                      <select
+                        className="border border-white/15 bg-ink px-3 py-2 text-sm"
+                        defaultValue=""
+                        onChange={(e) => {
+                          if (e.target.value) reassign(o.id, e.target.value);
+                          e.target.value = "";
+                        }}
+                      >
+                        <option value="">{t("reassignTo")}</option>
+                        {partners
+                          .filter((p) => p.approval === "approved")
+                          .map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.name}
+                            </option>
+                          ))}
+                      </select>
+                    )}
+                    {o.payment?.status === "receipt_submitted" && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => confirmPayment(o.id)}
+                          className="border border-clay px-3 py-2 text-[10px] uppercase tracking-widest text-clay"
+                        >
+                          {t("paymentConfirm")}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => rejectPayment(o.id)}
+                          className="border border-white/20 px-3 py-2 text-[10px] uppercase tracking-widest hover:border-red-400"
+                        >
+                          {t("paymentReject")}
+                        </button>
+                      </>
+                    )}
+                    {o.status === "offered" && !manualMode && (
                       <button
                         type="button"
                         onClick={() => forceExpire(o.id)}
@@ -182,7 +219,7 @@ export default function AdminPage() {
                         {t("forceCascade")}
                       </button>
                     )}
-                    {o.finance && o.finance.payoutStatus === "pending" && o.status === "delivered" && (
+                    {o.finance && o.finance.payoutStatus === "pending" && o.status === "delivered" && !manualMode && (
                       <button
                         type="button"
                         onClick={() => markPaid(o.id)}
@@ -203,6 +240,17 @@ export default function AdminPage() {
                       .replace("{other}", formatPrice(o.finance.otherCost))
                       .replace("{rev}", formatPrice(o.finance.jeribRevenue))}
                   </p>
+                )}
+                {o.payment?.receiptDataUrl && (
+                  <details className="mt-4">
+                    <summary className="cursor-pointer text-xs text-clay">{t("paymentReceipt")}</summary>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={o.payment.receiptDataUrl}
+                      alt={t("paymentReceipt")}
+                      className="mt-2 max-h-48 border border-white/15 object-contain"
+                    />
+                  </details>
                 )}
                 <details className="mt-3 text-xs text-mist">
                   <summary className="cursor-pointer">{t("assignmentHistory")}</summary>

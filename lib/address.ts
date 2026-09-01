@@ -2,6 +2,7 @@ import { cityLabel, countryLabel, type CityId, type CountryId } from "@/lib/disp
 import type { Lang } from "@/lib/i18n";
 
 export type AddressFields = {
+  phone: string;
   line1: string;
   line2: string;
   state: string;
@@ -9,11 +10,28 @@ export type AddressFields = {
 };
 
 export const EMPTY_ADDRESS: AddressFields = {
+  phone: "",
   line1: "",
   line2: "",
   state: "",
   postalCode: "",
 };
+
+export function normalizePhone(phone: string) {
+  return phone.replace(/[^\d+]/g, "").replace(/^00/, "+");
+}
+
+export function isPhoneValid(phone: string) {
+  const digits = normalizePhone(phone.trim()).replace(/\D/g, "");
+  return digits.length >= 9;
+}
+
+function looksLikePhoneLine(line: string) {
+  const trimmed = line.trim();
+  if (!trimmed) return false;
+  const digits = normalizePhone(trimmed).replace(/\D/g, "");
+  return digits.length >= 9 && /^[+]?[\d\s\-().]+$/.test(trimmed);
+}
 
 export const US_STATES: { code: string; name: string }[] = [
   { code: "AL", name: "Alabama" },
@@ -110,16 +128,23 @@ export function addressLayout(countryId: CountryId | string): AddressLayout {
   return { showState: false, stateOptions: null, postalStyle: "eu" };
 }
 
-export function isAddressValid(fields: AddressFields, countryId: CountryId | string) {
-  return validateAddress(fields, countryId).valid;
+export function isAddressValid(
+  fields: AddressFields,
+  countryId: CountryId | string,
+  opts?: { requirePhone?: boolean }
+) {
+  return validateAddress(fields, countryId, opts).valid;
 }
 
-export type AddressValidationIssue = "line1" | "state" | "postal" | "postalFormat";
+export type AddressValidationIssue = "phone" | "line1" | "state" | "postal" | "postalFormat";
 
 export function validateAddress(
   fields: AddressFields,
-  countryId: CountryId | string
+  countryId: CountryId | string,
+  opts?: { requirePhone?: boolean }
 ): { valid: true } | { valid: false; issue: AddressValidationIssue } {
+  const requirePhone = opts?.requirePhone !== false;
+  if (requirePhone && !isPhoneValid(fields.phone)) return { valid: false, issue: "phone" };
   const layout = addressLayout(countryId);
   if (!fields.line1.trim()) return { valid: false, issue: "line1" };
   if (layout.showState && !fields.state.trim()) return { valid: false, issue: "state" };
@@ -146,7 +171,10 @@ export function formatDeliveryAddress(
   const postal = fields.postalCode.trim().toUpperCase();
   const layout = addressLayout(opts.countryId);
 
-  const lines: string[] = [line1];
+  const phone = fields.phone.trim();
+  const lines: string[] = [];
+  if (phone) lines.push(phone);
+  lines.push(line1);
   if (line2) lines.push(line2);
 
   if (layout.postalStyle === "us") {
@@ -171,18 +199,29 @@ export function parseDeliveryAddress(raw: string): AddressFields {
   const text = raw.trim();
   if (!text) return { ...EMPTY_ADDRESS };
 
-  const lines = text
+  let lines = text
     .split(/\n+/)
     .map((l) => l.trim())
     .filter(Boolean);
 
+  let phone = "";
+  if (lines[0] && looksLikePhoneLine(lines[0])) {
+    phone = lines[0];
+    lines = lines.slice(1);
+  }
+
+  if (!lines.length) {
+    return { ...EMPTY_ADDRESS, phone };
+  }
+
   if (lines.length === 1) {
-    return { line1: lines[0], line2: "", state: "", postalCode: "" };
+    return { phone, line1: lines[0], line2: "", state: "", postalCode: "" };
   }
 
   const usTail = lines[lines.length - 1].match(/^(.+),\s*([A-Z]{2})\s+(\d{5}(?:-\d{4})?)$/);
   if (usTail && lines.length >= 2) {
     return {
+      phone,
       line1: lines[0],
       line2: lines.length > 2 ? lines.slice(1, -1).join(", ") : "",
       state: usTail[2],
@@ -193,6 +232,7 @@ export function parseDeliveryAddress(raw: string): AddressFields {
   const postalOnly = lines[lines.length - 1].match(/^([A-Z0-9][A-Z0-9\s-]{2,10})$/i);
   if (postalOnly && lines.length >= 2) {
     return {
+      phone,
       line1: lines[0],
       line2: lines.length > 2 ? lines[1] : "",
       state: "",
@@ -201,6 +241,7 @@ export function parseDeliveryAddress(raw: string): AddressFields {
   }
 
   return {
+    phone,
     line1: lines[0],
     line2: lines.slice(1).join(", "),
     state: "",

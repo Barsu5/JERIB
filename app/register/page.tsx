@@ -10,6 +10,9 @@ import { AddressForm } from "@/components/AddressForm";
 import {
   EMPTY_ADDRESS,
   formatDeliveryAddress,
+  isAddressValid,
+  isPhoneValid,
+  parseDeliveryAddress,
   type AddressFields,
 } from "@/lib/address";
 import {
@@ -32,7 +35,6 @@ function RegisterForm() {
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [cityId, setCityId] = useState<CityId>(DEFAULT_CITY_ID);
   const [countryId, setCountryId] = useState<CountryId>(DEFAULT_COUNTRY_ID);
@@ -60,10 +62,14 @@ function RegisterForm() {
         setError(t("authPasswordShort"));
         return;
       }
+      if (!isPhoneValid(addressFields.phone)) {
+        setError(t("authPhoneInvalid"));
+        return;
+      }
       const res = await useAuth.getState().registerClient({
         name: name.trim(),
         email: email.trim().toLowerCase(),
-        phone: phone.trim(),
+        phone: addressFields.phone.trim(),
         password,
         cityId,
         address: addressFields.line1
@@ -112,15 +118,6 @@ function RegisterForm() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-2 w-full border border-white/15 bg-transparent px-3 py-3 text-sm outline-none focus:border-clay"
-          />
-        </label>
-        <label className="block text-[10px] uppercase tracking-[0.22em] text-mist">
-          {t("phone")}
-          <input
-            required
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
             className="mt-2 w-full border border-white/15 bg-transparent px-3 py-3 text-sm outline-none focus:border-clay"
           />
         </label>

@@ -3,8 +3,11 @@
 import Link from "next/link";
 import { formatPrice } from "@/lib/catalog";
 import { locationLabel } from "@/lib/dispatch/cities";
+import { isPartnerDispatchEnabled } from "@/lib/dispatch/config";
 import { statusLabel } from "@/lib/dispatch/store";
 import type { DispatchOrder, PartnerOrderStatus } from "@/lib/dispatch/types";
+import { needsClientPayment } from "@/lib/payment/helpers";
+import { paymentStatusLabel } from "@/lib/payment/labels";
 import { useLang, useT, type DictKey } from "@/lib/i18n";
 
 export const CLIENT_PIPELINE: PartnerOrderStatus[] = [
@@ -37,6 +40,7 @@ function ensureHistory(order: DispatchOrder) {
 export function ClientOrderCard({ order }: { order: DispatchOrder }) {
   const t = useT();
   const lang = useLang((s) => s.lang);
+  const manualMode = !isPartnerDispatchEnabled();
   const step = orderStepIndex(order.status);
   const history = ensureHistory(order);
   const products = [...new Set(order.items.map((i) => i.productId))]
@@ -48,7 +52,13 @@ export function ClientOrderCard({ order }: { order: DispatchOrder }) {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-[10px] uppercase tracking-[0.24em] text-mist">{order.id}</p>
-          <p className="mt-2 font-display text-3xl text-clay">{statusLabel(order.status, lang)}</p>
+          <p className="mt-2 font-display text-3xl text-clay">
+            {order.payment && needsClientPayment(order)
+              ? paymentStatusLabel(order.payment.status, lang)
+              : manualMode && order.payment?.status === "confirmed"
+                ? t("manualOrderReceived")
+                : statusLabel(order.status, lang)}
+          </p>
           <p className="mt-2 text-sm text-mist">
             {products} · {locationLabel(order.cityId, lang)}
           </p>
@@ -59,7 +69,7 @@ export function ClientOrderCard({ order }: { order: DispatchOrder }) {
         <p className="font-display text-2xl">{formatPrice(order.total)}</p>
       </div>
 
-      {order.status !== "failed_no_partner" && (
+      {!manualMode && order.status !== "failed_no_partner" && !needsClientPayment(order) && (
         <div className="mt-5">
           <p className="mb-2 text-[10px] uppercase tracking-[0.2em] text-mist">{t("orderProgress")}</p>
           <div className="flex gap-1">
@@ -77,27 +87,29 @@ export function ClientOrderCard({ order }: { order: DispatchOrder }) {
         </div>
       )}
 
-      <div className="mt-5 border-t border-white/10 pt-4">
-        <p className="text-[10px] uppercase tracking-[0.2em] text-mist">{t("statusHistory")}</p>
-        <ol className="mt-3 space-y-2">
-          {[...history].reverse().slice(0, 4).map((ev, idx) => (
-            <li key={`${ev.status}-${ev.at}-${idx}`} className="flex justify-between gap-4 text-sm">
-              <span className={idx === 0 ? "text-paper" : "text-mist"}>
-                {statusLabel(ev.status, lang)}
-              </span>
-              <span className="shrink-0 text-xs text-mist">
-                {new Date(ev.at).toLocaleString()}
-              </span>
-            </li>
-          ))}
-        </ol>
-      </div>
+      {!manualMode && (
+        <div className="mt-5 border-t border-white/10 pt-4">
+          <p className="text-[10px] uppercase tracking-[0.2em] text-mist">{t("statusHistory")}</p>
+          <ol className="mt-3 space-y-2">
+            {[...history].reverse().slice(0, 4).map((ev, idx) => (
+              <li key={`${ev.status}-${ev.at}-${idx}`} className="flex justify-between gap-4 text-sm">
+                <span className={idx === 0 ? "text-paper" : "text-mist"}>
+                  {statusLabel(ev.status, lang)}
+                </span>
+                <span className="shrink-0 text-xs text-mist">
+                  {new Date(ev.at).toLocaleString()}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
 
       <Link
         href={`/order/${order.id}`}
         className="mt-5 inline-block text-[11px] uppercase tracking-[0.22em] text-clay hover:underline"
       >
-        {t("viewOrderDetails")}
+        {order.payment && needsClientPayment(order) ? t("paymentPayNow") : t("viewOrderDetails")}
       </Link>
     </article>
   );

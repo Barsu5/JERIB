@@ -27,6 +27,16 @@ import type {
   PrintMethod,
 } from "./types";
 import { DEFAULT_SETTINGS } from "./types";
+import { createInitialPayment, canDispatchOrder } from "@/lib/payment/helpers";
+import { isPartnerDispatchEnabled } from "@/lib/dispatch/config";
+import { finalizeOrderAfterPaymentConfirm } from "@/lib/dispatch/manual";
+import type { PaymentBankId } from "@/lib/payment/types";
+import {
+  applyConfirmPayment,
+  applyRejectPayment,
+  applySelectPaymentBank,
+  applySubmitPaymentReceipt,
+} from "@/lib/payment/actions";
 
 function uid() {
   return Math.random().toString(36).slice(2, 10);
@@ -103,6 +113,8 @@ function markFailed(order: DispatchOrder, now = Date.now()): DispatchOrder {
 }
 
 function tryAssign(order: DispatchOrder, partners: Partner[], settings: PlatformSettings, now: number) {
+  if (!isPartnerDispatchEnabled()) return order;
+  if (!canDispatchOrder(order)) return order;
   const tried = order.assignmentHistory
     .filter((a) => a.outcome !== "skipped")
     .map((a) => a.partnerId);
@@ -144,6 +156,10 @@ type DispatchState = {
   adminSetSettings: (patch: Partial<PlatformSettings>) => void | Promise<void>;
   adminSetLoad: (partnerId: string, load: number) => void | Promise<void>;
   adminMarkPayoutPaid: (orderId: string) => void | Promise<void>;
+  selectPaymentBank: (orderId: string, method: PaymentBankId) => void | Promise<void>;
+  submitPaymentReceipt: (orderId: string, receiptDataUrl: string) => void | Promise<void>;
+  adminConfirmPayment: (orderId: string) => void | Promise<void>;
+  adminRejectPayment: (orderId: string, reason?: string) => void | Promise<void>;
   /** Demo: force-expire current offer immediately */
   forceExpireOffer: (orderId: string) => void;
 };
@@ -209,8 +225,8 @@ export const useDispatch = create<DispatchState>()(
           adminAlert: false,
           clientAlert: false,
           notes: "",
+          payment: createInitialPayment(id, total),
         };
-        order = tryAssign(order, get().partners, get().settings, now);
         set({ orders: [order, ...get().orders] });
         return id;
       },
@@ -424,6 +440,72 @@ export const useDispatch = create<DispatchState>()(
               ...o,
               finance: { ...o.finance, payoutStatus: "paid", paidAt: Date.now() },
             };
+          }),
+        });
+      },
+
+      selectPaymentBank: async (orderId, method) => {
+        if (get().useApi) {
+          const { order } = await apiOrderAction(orderId, "selectBank", { method });
+          set({ orders: get().orders.map((o) => (o.id === orderId ? order : o)) });
+          return;
+        }
+        set({
+          orders: get().orders.map((o) => {
+            if (o.id !== orderId) return o;
+            return applySelectPaymentBank(o, method) ?? o;
+          }),
+        });
+      },
+
+      submitPaymentReceipt: async (orderId, receiptDataUrl) => {
+        if (get().useApi) {
+          const { order } = await apiOrderAction(orderId, "submitReceipt", { receiptDataUrl });
+          set({ orders: get().orders.map((o) => (o.id === orderId ? order : o)) });
+          return;
+        }
+        set({
+          orders: get().orders.map((o) => {
+            if (o.id !== orderId) return o;
+            return applySubmitPaymentReceipt(o, receiptDataUrl) ?? o;
+          }),
+        });
+      },
+
+      adminConfirmPayment: async (orderId) => {
+        if (get().useApi) {
+          const { order } = await apiOrderAction(orderId, "confirmPayment");
+          set({ orders: get().orders.map((o) => (o.id === orderId ? order : o)) });
+          return;
+        }
+        const { partners, settings } = get();
+        const now = Date.now();
+        set({
+          orders: get().orders.map((o) => {
+            if (o.id !== orderId) return o;
+            const confirmed = applyConfirmPayment(o);
+            if (!confirmed) return o;
+            if (isPartnerDispatchEnabled()) {
+              if (confirmed.status === "searching" && !confirmed.partnerId && canDispatchOrder(confirmed)) {
+                return tryAssign(confirmed, partners, settings, now);
+              }
+              return confirmed;
+            }
+            return finalizeOrderAfterPaymentConfirm(confirmed, now);
+          }),
+        });
+      },
+
+      adminRejectPayment: async (orderId, reason) => {
+        if (get().useApi) {
+          const { order } = await apiOrderAction(orderId, "rejectPayment", { reason });
+          set({ orders: get().orders.map((o) => (o.id === orderId ? order : o)) });
+          return;
+        }
+        set({
+          orders: get().orders.map((o) => {
+            if (o.id !== orderId) return o;
+            return applyRejectPayment(o, reason) ?? o;
           }),
         });
       },

@@ -3,6 +3,7 @@ import type { PublicUser } from "@/lib/auth/types";
 import type { CityId } from "@/lib/dispatch/types";
 import { normalizeCityId } from "@/lib/dispatch/cities";
 import type { DispatchOrder, Partner, PlatformSettings } from "@/lib/dispatch/types";
+import { decodePaymentFromNotes, paymentFromOrderRow } from "@/lib/payment/storage";
 import type { CartItem } from "@/lib/types";
 import { DEFAULT_SETTINGS } from "@/lib/dispatch/types";
 
@@ -53,6 +54,7 @@ export function toPartner(row: PrismaPartner): Partner {
 }
 
 export function toOrder(row: PrismaOrder): DispatchOrder {
+  const { notes } = decodePaymentFromNotes(row.notes);
   return {
     id: row.id,
     userId: row.userId,
@@ -75,7 +77,8 @@ export function toOrder(row: PrismaOrder): DispatchOrder {
     finance: (row.finance as DispatchOrder["finance"]) ?? null,
     adminAlert: row.adminAlert,
     clientAlert: row.clientAlert,
-    notes: row.notes,
+    notes,
+    payment: paymentFromOrderRow(row),
   };
 }
 

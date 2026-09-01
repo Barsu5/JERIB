@@ -10,7 +10,14 @@ import {
   partnerAdvanceOrder,
   partnerRejectOrder,
   runDispatchTick,
+  saveOrder,
 } from "@/lib/server/orders";
+import {
+  confirmPaymentAndDispatch,
+  rejectPayment,
+  selectPaymentBank,
+  submitPaymentReceipt,
+} from "@/lib/server/payment";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -40,7 +47,13 @@ export async function PATCH(req: Request, ctx: Ctx) {
   if (!user) return unauthorized();
 
   const { id } = await ctx.params;
-  const body = (await req.json()) as { action?: string; partnerId?: string };
+  const body = (await req.json()) as {
+    action?: string;
+    partnerId?: string;
+    method?: string;
+    receiptDataUrl?: string;
+    reason?: string;
+  };
 
   switch (body.action) {
     case "accept": {
@@ -72,6 +85,42 @@ export async function PATCH(req: Request, ctx: Ctx) {
       const order = await adminMarkPayoutPaid(id);
       if (!order) return badRequest("invalid_state");
       return NextResponse.json({ order });
+    }
+    case "selectBank": {
+      if (user.role !== "client") return forbidden();
+      const order = await loadOrder(id);
+      if (!order || order.userId !== user.id) return forbidden();
+      const method = body.method as "alif" | "dushanbe_city" | undefined;
+      if (method !== "alif" && method !== "dushanbe_city") return badRequest("invalid_bank");
+      const next = selectPaymentBank(order, method);
+      if (!next) return badRequest("invalid_state");
+      await saveOrder(next);
+      return NextResponse.json({ order: next });
+    }
+    case "submitReceipt": {
+      if (user.role !== "client") return forbidden();
+      const order = await loadOrder(id);
+      if (!order || order.userId !== user.id) return forbidden();
+      const receiptDataUrl = typeof body.receiptDataUrl === "string" ? body.receiptDataUrl : "";
+      const next = submitPaymentReceipt(order, receiptDataUrl);
+      if (!next) return badRequest("invalid_state");
+      await saveOrder(next);
+      return NextResponse.json({ order: next });
+    }
+    case "confirmPayment": {
+      if (user.role !== "admin") return forbidden();
+      const order = await confirmPaymentAndDispatch(id);
+      if (!order) return badRequest("invalid_state");
+      return NextResponse.json({ order });
+    }
+    case "rejectPayment": {
+      if (user.role !== "admin") return forbidden();
+      const order = await loadOrder(id);
+      if (!order) return badRequest("not_found");
+      const next = rejectPayment(order, typeof body.reason === "string" ? body.reason : undefined);
+      if (!next) return badRequest("invalid_state");
+      await saveOrder(next);
+      return NextResponse.json({ order: next });
     }
     case "tick": {
       if (user.role !== "admin") return forbidden();

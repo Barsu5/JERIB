@@ -48,6 +48,8 @@ export function authErrorKey(code: AuthErrorCode): DictKey {
 
 export function addressIssueKey(issue: AddressValidationIssue): DictKey {
   switch (issue) {
+    case "phone":
+      return "authPhoneInvalid";
     case "line1":
       return "authAddressMissingStreet";
     case "state":

@@ -74,7 +74,10 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ order });
-  } catch {
-    return NextResponse.json({ error: "server_error" }, { status: 500 });
+  } catch (err) {
+    console.error("[POST /api/orders]", err);
+    const detail =
+      process.env.NODE_ENV === "development" && err instanceof Error ? err.message : undefined;
+    return NextResponse.json({ error: "server_error", detail }, { status: 500 });
   }
 }

@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { formatPrice } from "@/lib/catalog";
+import { isPartnerDispatchEnabled } from "@/lib/dispatch/config";
 import { useDispatch } from "@/lib/dispatch/store";
 import { useT, type DictKey } from "@/lib/i18n";
-import { SERVICE_FEE_SOM, clientUnitPrice, minClientUnitPrice } from "@/lib/pricing";
+import { SERVICE_FEE_SOM, clientUnitPriceFromCatalog, minClientUnitPrice } from "@/lib/pricing";
 import { useShop } from "@/lib/store";
 
 export default function CartPage() {
@@ -13,9 +14,12 @@ export default function CartPage() {
   const remove = useShop((s) => s.removeFromCart);
   const setQty = useShop((s) => s.setQty);
   const partners = useDispatch((s) => s.partners);
+  const manualMode = !isPartnerDispatchEnabled();
 
   const lines = cart.map((item) => {
-    const from = minClientUnitPrice(partners, item.productId);
+    const from = manualMode
+      ? clientUnitPriceFromCatalog(item.productId)
+      : minClientUnitPrice(partners, item.productId);
     return { item, unit: from, line: from != null ? from * item.qty : null };
   });
   const total = lines.every((l) => l.line != null)
@@ -25,7 +29,7 @@ export default function CartPage() {
   return (
     <main className="mx-auto min-h-screen max-w-4xl px-6 pb-24 pt-32">
       <h1 className="font-display text-6xl">{t("cartTitle")}</h1>
-      <p className="mt-3 text-sm text-mist">{t("cartPriceHint")}</p>
+      <p className="mt-3 text-sm text-mist">{manualMode ? t("cartPriceHintManual") : t("cartPriceHint")}</p>
 
       {cart.length === 0 ? (
         <div className="mt-16">

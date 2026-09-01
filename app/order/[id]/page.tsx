@@ -4,13 +4,16 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { CLIENT_PIPELINE, orderStepIndex } from "@/components/ClientOrderCard";
 import { FinalPreview } from "@/components/FinalPreview";
+import { OrderPaymentPanel } from "@/components/OrderPaymentPanel";
 import { useSessionUser } from "@/lib/auth/store";
 import { colorById, formatPrice } from "@/lib/catalog";
 import { cityLabel } from "@/lib/dispatch/cities";
+import { isPartnerDispatchEnabled } from "@/lib/dispatch/config";
 import { partnerById, statusLabel, useDispatch } from "@/lib/dispatch/store";
 import { useDispatchTick } from "@/lib/dispatch/useDispatchTick";
 import { useLang, useT, type DictKey } from "@/lib/i18n";
-import { SERVICE_FEE_SOM, clientUnitPrice, partnerUnitPrice } from "@/lib/pricing";
+import { needsClientPayment } from "@/lib/payment/helpers";
+import { paymentStatusLabel } from "@/lib/payment/labels";
 
 export default function OrderPage() {
   const t = useT();
@@ -21,6 +24,7 @@ export default function OrderPage() {
   const order = useDispatch((s) => s.orders.find((o) => o.id === params.id));
   const partners = useDispatch((s) => s.partners);
   const partner = partnerById(partners, order?.partnerId ?? null);
+  const manualMode = !isPartnerDispatchEnabled();
 
   if (!order) {
     return (
@@ -35,9 +39,14 @@ export default function OrderPage() {
 
   const stepIndex = orderStepIndex(order.status);
   const first = order.items[0];
-  const history = order.statusHistory?.length
-    ? order.statusHistory
-    : [{ status: order.status, at: order.createdAt }];
+  const showPayment = needsClientPayment(order) || order.payment?.status === "confirmed";
+  const paidManual = manualMode && order.payment?.status === "confirmed";
+  const headline =
+    order.payment && needsClientPayment(order)
+      ? paymentStatusLabel(order.payment.status, lang)
+      : paidManual
+        ? t("manualOrderReceived")
+        : statusLabel(order.status, lang);
 
   return (
     <main className="mx-auto min-h-screen max-w-3xl px-6 pb-24 pt-32">
@@ -49,7 +58,7 @@ export default function OrderPage() {
       </Link>
 
       <p className="mt-6 text-[10px] uppercase tracking-[0.32em] text-mist">{order.id}</p>
-      <h1 className="mt-3 font-display text-5xl md:text-6xl">{statusLabel(order.status, lang)}</h1>
+      <h1 className="mt-3 font-display text-5xl md:text-6xl">{headline}</h1>
       <p className="mt-4 text-sm text-mist">
         {order.name} · {cityLabel(order.cityId, lang)}
       </p>
@@ -57,20 +66,25 @@ export default function OrderPage() {
         {t("orderedAt")}: {new Date(order.createdAt).toLocaleString()}
       </p>
 
-      {order.clientAlert && (
+      {order.clientAlert && !manualMode && (
         <div className="mt-6 border border-clay/40 bg-clay/10 px-4 py-3 text-sm">
-          {t("clientNoPartner")}
+          {order.payment?.status === "rejected" ? t("paymentRejectedAlert") : t("clientNoPartner")}
         </div>
       )}
 
+      {showPayment && <OrderPaymentPanel order={order} />}
+
       <p className="mt-6 text-sm text-mist">
-        {t("jeribHandlesPartner")}
-        {partner && order.status !== "failed_no_partner" && order.status !== "searching" && (
-          <>
-            {" "}
-            · {t("localPartnerIn")} {cityLabel(partner.cityId, lang)}
-          </>
-        )}
+        {manualMode ? t("manualOrderBody") : t("jeribHandlesPartner")}
+        {!manualMode &&
+          partner &&
+          order.status !== "failed_no_partner" &&
+          order.status !== "searching" && (
+            <>
+              {" "}
+              · {t("localPartnerIn")} {cityLabel(partner.cityId, lang)}
+            </>
+          )}
       </p>
 
       {first && (
@@ -87,77 +101,47 @@ export default function OrderPage() {
         </div>
       )}
 
-      {order.status !== "failed_no_partner" && (
-        <section className="mt-14">
-          <h2 className="font-display text-3xl">{t("orderProgress")}</h2>
-          <ol className="mt-6 space-y-2">
-            {CLIENT_PIPELINE.map((s, i) => {
-              const done = i <= stepIndex;
-              const current = i === stepIndex;
-              return (
-                <li
-                  key={s}
-                  className={`flex items-center gap-4 border px-4 py-3 text-sm ${
-                    current
-                      ? "border-clay text-paper"
-                      : done
-                        ? "border-white/20 text-paper"
-                        : "border-white/10 text-mist"
-                  }`}
-                >
-                  <span
-                    className={`flex h-7 w-7 shrink-0 items-center justify-center text-[10px] ${
-                      done ? "bg-clay text-paper" : "border border-white/20"
+      {!manualMode &&
+        order.status !== "failed_no_partner" &&
+        !needsClientPayment(order) && (
+          <section className="mt-14">
+            <h2 className="font-display text-3xl">{t("orderProgress")}</h2>
+            <ol className="mt-6 space-y-2">
+              {CLIENT_PIPELINE.map((s, i) => {
+                const done = i <= stepIndex;
+                const current = i === stepIndex;
+                return (
+                  <li
+                    key={s}
+                    className={`flex items-center gap-4 border px-4 py-3 text-sm ${
+                      current
+                        ? "border-clay text-paper"
+                        : done
+                          ? "border-white/20 text-paper"
+                          : "border-white/10 text-mist"
                     }`}
                   >
-                    {done ? "✓" : i + 1}
-                  </span>
-                  <span className="font-display text-xl">{statusLabel(s, lang)}</span>
-                </li>
-              );
-            })}
-          </ol>
-        </section>
-      )}
-
-      <section className="mt-14">
-        <h2 className="font-display text-3xl">{t("statusHistory")}</h2>
-        <ol className="mt-6 space-y-0 border-l border-white/15 pl-6">
-          {[...history].reverse().map((ev, idx) => (
-            <li key={`${ev.status}-${ev.at}-${idx}`} className="relative pb-6 last:pb-0">
-              <span
-                className={`absolute -left-[1.64rem] top-1 h-3 w-3 rounded-full ${
-                  idx === 0 ? "bg-clay" : "bg-white/30"
-                }`}
-              />
-              <p className={`font-display text-2xl ${idx === 0 ? "text-paper" : "text-mist"}`}>
-                {statusLabel(ev.status, lang)}
-              </p>
-              <p className="mt-1 text-xs text-mist">{new Date(ev.at).toLocaleString()}</p>
-            </li>
-          ))}
-        </ol>
-      </section>
+                    <span
+                      className={`flex h-7 w-7 shrink-0 items-center justify-center text-[10px] ${
+                        done ? "bg-clay text-paper" : "border border-white/20"
+                      }`}
+                    >
+                      {done ? "✓" : i + 1}
+                    </span>
+                    <span className="font-display text-xl">{statusLabel(s, lang)}</span>
+                  </li>
+                );
+              })}
+            </ol>
+          </section>
+        )}
 
       <ul className="mt-12 space-y-3 text-sm text-mist">
-        {order.items.map((i) => {
-          const pUnit = partner ? partnerUnitPrice(partner, i.productId) : null;
-          const cUnit = partner ? clientUnitPrice(partner, i.productId) : null;
-          return (
-            <li key={i.id}>
-              {t(`product_${i.productId}` as DictKey)} · {i.size} · ×{i.qty}
-              {cUnit != null && <> · {formatPrice(cUnit * i.qty)}</>}
-              {pUnit != null && (
-                <span className="block text-xs">
-                  {t("priceBreakdown")
-                    .replace("{partner}", formatPrice(pUnit))
-                    .replace("{fee}", formatPrice(SERVICE_FEE_SOM))
-                    .replace("{client}", formatPrice(pUnit + SERVICE_FEE_SOM))}
-                </span>
-              )}
-            </li>
-          );
-        })}
+        {order.items.map((i) => (
+          <li key={i.id}>
+            {t(`product_${i.productId}` as DictKey)} · {i.size} · ×{i.qty}
+          </li>
+        ))}
       </ul>
       <p className="mt-8 font-display text-4xl">{formatPrice(order.total)}</p>
       <p className="mt-2 whitespace-pre-line text-xs text-mist">{order.address}</p>

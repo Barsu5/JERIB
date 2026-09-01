@@ -90,6 +90,21 @@ export function AddressForm({
         />
       </label>
 
+      {!isCompany && (
+        <label className="block text-[10px] uppercase tracking-[0.22em] text-mist">
+          {t("phone")}
+          <input
+            required={!isCompany}
+            type="tel"
+            value={value.phone}
+            onChange={(e) => set({ phone: e.target.value })}
+            placeholder={t("phonePlaceholder")}
+            autoComplete="tel"
+            className={fieldClass}
+          />
+        </label>
+      )}
+
       <div className={`grid gap-4 ${layout.showState ? "sm:grid-cols-2" : ""}`}>
         {layout.showState && (
           <label className="block text-[10px] uppercase tracking-[0.22em] text-mist">

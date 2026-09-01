@@ -1,5 +1,6 @@
 import type { CartItem, ProductId } from "@/lib/types";
 import type { Partner } from "@/lib/dispatch/types";
+import { productById } from "@/lib/catalog";
 
 /** Jerib service fee added on top of partner production price (сомони) */
 export const SERVICE_FEE_SOM = 150;
@@ -52,4 +53,29 @@ export function minClientUnitPrice(
     if (min == null || c < min) min = c;
   }
   return min;
+}
+
+/** Catalog list price + service fee (no partners). */
+export function clientUnitPriceFromCatalog(productId: ProductId) {
+  const product = productById(productId);
+  if (!product) return null;
+  return product.price + SERVICE_FEE_SOM;
+}
+
+export function clientCartTotalFromCatalog(items: CartItem[]) {
+  let production = 0;
+  let units = 0;
+  for (const item of items) {
+    const product = productById(item.productId);
+    if (!product) return null;
+    production += product.price * item.qty;
+    units += item.qty;
+  }
+  const service = SERVICE_FEE_SOM * units;
+  return {
+    production,
+    service,
+    total: production + service,
+    units,
+  };
 }

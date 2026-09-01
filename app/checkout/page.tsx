@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useSessionUser, useAuthHydrated } from "@/lib/auth/store";
+import { useSessionUser, useAuthHydrated, useAuth } from "@/lib/auth/store";
 import { formatPrice } from "@/lib/catalog";
 import { CountryCitySelect } from "@/components/CountryCitySelect";
 import { AddressForm } from "@/components/AddressForm";
@@ -24,13 +24,16 @@ import {
   type CountryId,
 } from "@/lib/dispatch/cities";
 import { rankPartnersGeoFirst } from "@/lib/dispatch/scoring";
+import { isPartnerDispatchEnabled } from "@/lib/dispatch/config";
 import { useDispatch } from "@/lib/dispatch/store";
 import type { PrintMethod } from "@/lib/dispatch/types";
 import { useLang, useT, type DictKey } from "@/lib/i18n";
 import {
   SERVICE_FEE_SOM,
+  clientCartTotalFromCatalog,
   clientTotalForPartner,
   clientUnitPrice,
+  clientUnitPriceFromCatalog,
   partnerUnitPrice,
 } from "@/lib/pricing";
 import { useShop } from "@/lib/store";
@@ -46,6 +49,7 @@ export default function CheckoutPage() {
   const partners = useDispatch((s) => s.partners);
   const settings = useDispatch((s) => s.settings);
   const createAndDispatch = useDispatch((s) => s.createAndDispatch);
+  const updateProfile = useAuth((s) => s.updateProfile);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [addressFields, setAddressFields] = useState<AddressFields>(EMPTY_ADDRESS);
@@ -57,13 +61,23 @@ export default function CheckoutPage() {
     if (!user) return;
     setName(user.name);
     setEmail(user.email);
-    setAddressFields(parseDeliveryAddress(user.address));
+    const parsed = parseDeliveryAddress(user.address);
+    setAddressFields({
+      ...parsed,
+      phone: parsed.phone || user.phone || "",
+    });
     setCityId(normalizeCityId(user.cityId));
     setCountryId(cityCountryId(user.cityId));
   }, [user]);
 
+  const manualMode = !isPartnerDispatchEnabled();
+
   const quote = useMemo(() => {
     if (!cart.length) return null;
+    if (manualMode) {
+      const totals = clientCartTotalFromCatalog(cart);
+      return totals ? { ...totals, manual: true as const } : null;
+    }
     const productIds = [...new Set(cart.map((i) => i.productId))];
     const qty = cart.reduce((n, i) => n + i.qty, 0);
     const city = cityById(cityId);
@@ -83,8 +97,8 @@ export default function CheckoutPage() {
     if (!best) return null;
     const totals = clientTotalForPartner(best.partner, cart);
     if (!totals) return null;
-    return { partner: best.partner, ...totals };
-  }, [cart, cityId, printMethod, partners, settings]);
+    return { partner: best.partner, ...totals, manual: false as const };
+  }, [cart, cityId, printMethod, partners, settings, manualMode]);
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -93,6 +107,10 @@ export default function CheckoutPage() {
       return;
     }
     if (!cart.length || !quote || !isAddressValid(addressFields, countryId)) return;
+    const phone = addressFields.phone.trim();
+    if (phone !== user.phone) {
+      await updateProfile({ phone });
+    }
     const id = await createAndDispatch({
       userId: user.id,
       name,
@@ -161,7 +179,7 @@ export default function CheckoutPage() {
     <main className="mx-auto grid min-h-screen max-w-5xl gap-16 px-6 pb-24 pt-32 md:grid-cols-2">
       <form onSubmit={onSubmit} className="space-y-6">
         <h1 className="font-display text-5xl">{t("produceThis")}</h1>
-        <p className="text-sm text-mist">{t("checkoutDispatchBody")}</p>
+        <p className="text-sm text-mist">{manualMode ? t("checkoutManualBody") : t("checkoutDispatchBody")}</p>
         <label className="block text-[10px] uppercase tracking-[0.22em] text-mist">
           {t("name")}
           <input
@@ -215,14 +233,19 @@ export default function CheckoutPage() {
           {t("confirmOrder")}
           {quote ? ` · ${formatPrice(quote.total)}` : ""}
         </button>
-        {!quote && <p className="text-sm text-clay">{t("noPartnerForQuote")}</p>}
+        {!quote && !manualMode && <p className="text-sm text-clay">{t("noPartnerForQuote")}</p>}
       </form>
       <aside className="border border-white/10 p-8">
         <p className="text-[10px] uppercase tracking-[0.28em] text-mist">{t("toProduce")}</p>
         <ul className="mt-6 space-y-4 text-sm">
           {cart.map((i) => {
-            const partnerPrice = quote ? partnerUnitPrice(quote.partner, i.productId) : null;
-            const clientPrice = quote ? clientUnitPrice(quote.partner, i.productId) : null;
+            const partnerPrice =
+              quote && !quote.manual ? partnerUnitPrice(quote.partner, i.productId) : null;
+            const clientPrice = quote
+              ? quote.manual
+                ? clientUnitPriceFromCatalog(i.productId)
+                : clientUnitPrice(quote.partner, i.productId)
+              : null;
             return (
               <li key={i.id} className="border-b border-white/10 pb-4">
                 <div className="flex justify-between gap-4">
@@ -231,7 +254,7 @@ export default function CheckoutPage() {
                   </span>
                   <span>{clientPrice != null ? formatPrice(clientPrice * i.qty) : "—"}</span>
                 </div>
-                {partnerPrice != null && clientPrice != null && (
+                {partnerPrice != null && clientPrice != null && !quote?.manual && (
                   <p className="mt-2 text-xs text-mist">
                     {t("priceBreakdown")
                       .replace("{partner}", formatPrice(partnerPrice))
@@ -246,7 +269,7 @@ export default function CheckoutPage() {
         {quote && (
           <div className="mt-6 space-y-2 border-t border-white/10 pt-6 text-sm">
             <div className="flex justify-between text-mist">
-              <span>{t("partnerProduction")}</span>
+              <span>{manualMode ? t("orderSubtotal") : t("partnerProduction")}</span>
               <span>{formatPrice(quote.production)}</span>
             </div>
             <div className="flex justify-between text-mist">
@@ -261,7 +284,9 @@ export default function CheckoutPage() {
             </div>
           </div>
         )}
-        <p className="mt-8 text-xs leading-relaxed text-mist">{t("checkoutPartnerNote")}</p>
+        <p className="mt-8 text-xs leading-relaxed text-mist">
+          {manualMode ? t("checkoutManualNote") : t("checkoutPartnerNote")}
+        </p>
       </aside>
     </main>
   );

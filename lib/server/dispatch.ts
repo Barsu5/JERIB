@@ -3,6 +3,10 @@ import { Prisma } from "@prisma/client";
 import { clientTotalForPartner } from "@/lib/pricing";
 import { cityById } from "@/lib/dispatch/cities";
 import { calcFinance } from "@/lib/dispatch/finance";
+import { createInitialPayment, canDispatchOrder } from "@/lib/payment/helpers";
+import { isPartnerDispatchEnabled } from "@/lib/dispatch/config";
+import { finalizeOrderAfterPaymentConfirm } from "@/lib/dispatch/manual";
+import { notesForOrderRow } from "@/lib/payment/storage";
 import { rankPartnersGeoFirst, type MatchContext } from "@/lib/dispatch/scoring";
 import type {
   AssignmentAttempt,
@@ -89,6 +93,8 @@ function markFailed(order: DispatchOrder, now = Date.now()): DispatchOrder {
 }
 
 export function tryAssign(order: DispatchOrder, partners: Partner[], settings: PlatformSettings, now: number) {
+  if (!isPartnerDispatchEnabled()) return order;
+  if (!canDispatchOrder(order)) return order;
   const tried = order.assignmentHistory
     .filter((a) => a.outcome !== "skipped")
     .map((a) => a.partnerId);
@@ -134,6 +140,7 @@ export function createOrderDraft(input: {
     adminAlert: false,
     clientAlert: false,
     notes: "",
+    payment: createInitialPayment(id, input.total),
   };
 }
 
@@ -264,7 +271,7 @@ export function orderToDb(order: DispatchOrder) {
     finance: order.finance ? (order.finance as Prisma.InputJsonValue) : Prisma.JsonNull,
     adminAlert: order.adminAlert,
     clientAlert: order.clientAlert,
-    notes: order.notes,
+    notes: notesForOrderRow(order),
     createdAt: new Date(order.createdAt),
   };
 }

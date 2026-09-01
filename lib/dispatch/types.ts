@@ -3,6 +3,8 @@
 import type { CartItem, ProductId } from "@/lib/types";
 import type { City, CityId, CountryId } from "./cities";
 
+import type { OrderPayment } from "@/lib/payment/types";
+
 export type { City, CityId, CountryId };
 
 export type PrintMethod = "dtg" | "screen" | "embroidery" | "vinyl" | "sublimation";
@@ -132,6 +134,8 @@ export type DispatchOrder = {
   adminAlert: boolean;
   clientAlert: boolean;
   notes: string;
+  /** Client bank transfer — null on legacy orders */
+  payment: OrderPayment | null;
 };
 
 export type PlatformSettings = {

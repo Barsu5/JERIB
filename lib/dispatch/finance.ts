@@ -23,7 +23,7 @@ export function calcFinance(
   const units = items.reduce((n, i) => n + i.qty, 0);
   const serviceFees = SERVICE_FEE_SOM * units;
   const deliveryCost = settings.defaultDeliveryCost;
-  const paymentFee = Math.round(clientTotal * settings.paymentFeeRate * 100) / 100;
+  const paymentFee = 0;
   const otherCost = settings.otherCostFlat;
   const jeribRevenue =
     Math.round((serviceFees - deliveryCost - paymentFee - otherCost) * 100) / 100;

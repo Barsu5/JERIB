@@ -40,7 +40,6 @@ export default function AccountPage() {
   useDispatchTick();
 
   const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
   const [cityId, setCityId] = useState<CityId>(DEFAULT_CITY_ID);
   const [countryId, setCountryId] = useState<CountryId>(DEFAULT_COUNTRY_ID);
   const [addressFields, setAddressFields] = useState<AddressFields>(EMPTY_ADDRESS);
@@ -62,10 +61,13 @@ export default function AccountPage() {
       return;
     }
     setName(user.name);
-    setPhone(user.phone);
     setCityId(normalizeCityId(user.cityId));
     setCountryId(cityCountryId(user.cityId));
-    setAddressFields(parseDeliveryAddress(user.address));
+    const parsed = parseDeliveryAddress(user.address);
+    setAddressFields({
+      ...parsed,
+      phone: parsed.phone || user.phone || "",
+    });
   }, [user, router, authReady]);
 
   const myOrders = useMemo(() => {
@@ -93,7 +95,7 @@ export default function AccountPage() {
     if (!isAddressValid(addressFields, countryId)) return;
     await updateProfile({
       name,
-      phone,
+      phone: addressFields.phone.trim(),
       cityId,
       address: formatDeliveryAddress(addressFields, { cityId, countryId, lang }),
     });
@@ -189,14 +191,6 @@ export default function AccountPage() {
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-2 w-full border border-white/15 bg-transparent px-3 py-3 text-sm outline-none focus:border-clay"
-            />
-          </label>
-          <label className="block text-[10px] uppercase tracking-[0.2em] text-mist">
-            {t("phone")}
-            <input
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
               className="mt-2 w-full border border-white/15 bg-transparent px-3 py-3 text-sm outline-none focus:border-clay"
             />
           </label>
